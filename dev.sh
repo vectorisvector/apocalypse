@@ -1,4 +1,4 @@
-pnpm run localnode
+nohup obelisk localnode > localnode.nohup.out &
 
 sleep 5
 

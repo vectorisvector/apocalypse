@@ -3,19 +3,23 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "sh dev.sh && next dev -p 9000",
+    "dev": "next dev -p 9000",
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
     "worldgen": "obelisk schemagen obelisk.config.ts",
-    "localnode": "nohup obelisk localnode > localnode.nohup.out &"
+    "localnode": "sh dev.sh",
+    "launch": "sh dev.sh && next dev -p 9000"
   },
   "dependencies": {
     "@0xobelisk/cli": "^0.4.8",
     "@0xobelisk/client": "^0.4.8",
     "@0xobelisk/common": "^0.4.8",
+    "@headlessui/react": "^1.7.17",
     "@mysten/dapp-kit": "^0.7.0",
     "@mysten/sui.js": "^0.45.1",
+    "@suiet/wallet-kit": "^0.2.20",
+    "@tanstack/react-query": "^5.8.1",
     "next": "14.0.1",
     "react": "^18",
     "react-dom": "^18"

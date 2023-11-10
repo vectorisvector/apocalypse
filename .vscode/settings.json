@@ -4,12 +4,16 @@
   "cSpell.words": [
     "0xobelisk",
     "devnet",
+    "Fullnode",
+    "headlessui",
     "localnet",
     "localnode",
     "mysten",
     "nohup",
     "schemagen",
+    "suiet",
     "tailwindcss",
+    "tanstack",
     "worldgen"
   ],
   "sui-move-analyzer.inlay.hints.parameter": false,
