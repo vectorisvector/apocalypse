@@ -14,6 +14,8 @@
     "@0xobelisk/cli": "^0.4.8",
     "@0xobelisk/client": "^0.4.8",
     "@0xobelisk/common": "^0.4.8",
+    "@mysten/dapp-kit": "^0.7.0",
+    "@mysten/sui.js": "^0.45.1",
     "next": "14.0.1",
     "react": "^18",
     "react-dom": "^18"

@@ -1,24 +1,28 @@
 module apocalypse::pool_system {
     use std::vector::{Self};
-    use std::string::{String, utf8};
 
     use sui::object::{Self, UID};
     use sui::tx_context::{Self, TxContext};
-    use sui::package::{Self};
-    use sui::transfer::{Self};
     use sui::balance::{Self, Balance};
     use sui::sui::SUI;
     use sui::coin::{Self, Coin};
+    use sui::transfer::{Self};
+    use sui::package::{Self};
 
-    use apocalypse::world::{World};
-    use apocalypse::box_map_schema::{Self as box_map};
-    use apocalypse::prop_map_schema::{Self as prop_map};
+    use apocalypse::world::{Self as w, World, AdminCap};
+    use apocalypse::pool_schema::{Self as pool_schema};
+    use apocalypse::staker_map_schema::{Self as staker_map};
+    use apocalypse::pool_map_schema::{Self as pool_map};
+    use apocalypse::prop_system::{Self as p, Prop};
+    use apocalypse::card_system::{Self as c, Card};
+
+    friend apocalypse::game_system;
 
     // ----------Errors----------
-    const EInvalidType: u64 = 0;
-    const EInvalidAmount: u64 = 1;
-    const ENotBoxCap: u64 = 2;
-    const ENotProp: u64 = 3;
+    const ENotAdmin: u64 = 0;
+    const EInsufficientCoin: u64 = 1;
+    const EInsufficientPropBalance: u64 = 3;
+    const ENotPropOwner: u64 = 4;
 
     // ----------Consts----------
     const SCISSORS: vector<u8> = b"scissors";
@@ -26,369 +30,315 @@ module apocalypse::pool_system {
     const PAPER: vector<u8> = b"paper";
 
     // ----------Structs----------
-    struct PoolCap has key {
-        id: UID,
-    }
-
-    struct POOL_SYSTEM has drop {}
-
-    struct Prop has key, store {
-        id: UID,
-        type: String,
-        balance: Balance<SUI>,
-    }
-
-    struct Box has key, store {
-        id: UID,
-        fees: Balance<SUI>,
-        index: u64,
-        size: u64,
-        activated: bool,
-    }
-
     struct Pool has key {
         id: UID,
         balance: Balance<SUI>,
-        mint_prop_fee: u64,
-        game_fee: u16,
-        deadline_fee: u16,
-        prop_withdraw_fee: u16,
-        box_burn_fee: u16,
-        stake_fee: u16,
-        props: vector<Prop>,
-        boxes: vector<Box>,
+        staking_props: vector<Prop>,
+        gaming_props: vector<Prop>,
     }
+    
+    struct POOL_SYSTEM has drop {}
 
-    // ----------Pool Init----------
-    fun init(otw: POOL_SYSTEM, ctx: &mut TxContext) {
+    // ----------Init----------
+    #[allow(unused_function)]
+    fun init (otw: POOL_SYSTEM, ctx: &mut TxContext) {
         package::claim_and_keep(otw, ctx);
 
-        let pool_cap = PoolCap {
-            id: object::new(ctx)
-        };
-        transfer::transfer(pool_cap, tx_context::sender(ctx));
-        
-        let pool = Pool {
+        transfer::share_object(Pool {
             id: object::new(ctx),
             balance: balance::zero(),
-            mint_prop_fee: 2_000_000_000,
-            game_fee: 500,
-            deadline_fee: 8_000,
-            prop_withdraw_fee: 100,
-            box_burn_fee: 100,
-            stake_fee: 5_000,
-            props: vector::empty(),
-            boxes: vector::empty(),
-        };
-        transfer::share_object(pool);
+            staking_props: vector::empty(),
+            gaming_props: vector::empty(),
+        });
     }
 
-    // ----------Pool Functions----------
-    /// Withdraws the pool balance to the caller.
-    public fun withdraw(pool: &mut Pool, _: &PoolCap, ctx: &mut TxContext): Coin<SUI> {
-        let total_balance = balance(pool);
-        let coin = coin::take(&mut pool.balance, total_balance, ctx);
+    // ----------Admin Functions----------
+    public fun deposit(coin: Coin<SUI>, pool: &mut Pool, admin_cap: &AdminCap, world: &mut World, _: &mut TxContext) {
+        check_admin(admin_cap, world);
+
+        balance::join(&mut pool.balance, coin::into_balance(coin));
+        pool_schema::set_balance(world, balance::value(&pool.balance));
+    }
+
+    public fun withdraw(pool: &mut Pool, admin_cap: &AdminCap, world: &mut World, ctx: &mut TxContext): Coin<SUI> {
+        check_admin(admin_cap, world);
+
+        let coin_amount = balance::value(&pool.balance);
+        let coin = coin::take(&mut pool.balance, coin_amount, ctx);
+
+        pool_schema::set_balance(world, balance::value(&pool.balance));
+
         coin
     }
 
-    /// Updates the mint_prop_fee of the pool.
-    public fun update_mint_prop_fee(pool: &mut Pool, fee: u64, _: &PoolCap, _: &mut TxContext) {
-        pool.mint_prop_fee = fee;
-    }
+    public fun withdraw_to_founder(pool: &mut Pool, admin_cap: &AdminCap, world: &mut World, ctx: &mut TxContext): Coin<SUI>  {
+        check_admin(admin_cap, world);
 
-    /// Updates the game_fee of the pool.
-    public fun update_game_fee(pool: &mut Pool, fee: u16, _: &PoolCap, _: &mut TxContext) {
-        pool.game_fee = fee;
-    }
+        let founder_balance_amount = pool_schema::get_founder_balance(world);
+        let coin = coin::take(&mut pool.balance, founder_balance_amount, ctx);
 
-    /// Updates the deadline_fee of the pool.
-    public fun update_deadline_fee(pool: &mut Pool, fee: u16, _: &PoolCap, _: &mut TxContext) {
-        pool.deadline_fee = fee;
-    }
+        pool_schema::set_founder_balance(world, 0);
+        pool_schema::set_balance(world, balance::value(&pool.balance));
 
-    /// Updates the prop_withdraw_fee of the pool.
-    public fun update_prop_withdraw_fee(pool: &mut Pool, fee: u16, _: &PoolCap, _: &mut TxContext) {
-        pool.prop_withdraw_fee = fee;
-    }
-
-    /// Updates the box_burn_fee of the pool.
-    public fun update_box_burn_fee(pool: &mut Pool, fee: u16, _: &PoolCap, _: &mut TxContext) {
-        pool.box_burn_fee = fee;
-    }
-
-    /// Updates the stake_fee of the pool.
-    public fun update_stake_fee(pool: &mut Pool, fee: u16, _: &PoolCap, _: &mut TxContext) {
-        pool.stake_fee = fee;
-    }
-
-    // ----------Prop Functions----------
-    /// Creates a new prop and transfers it to the player
-    public fun create_prop(type: vector<u8>, coin: Coin<SUI>, pool: &Pool, ctx: &mut TxContext): Prop {
-        assert!(type == SCISSORS || type == ROCK || type == PAPER, EInvalidType);
-
-        let stake_amount = coin::value(&coin);
-        assert!(stake_amount == mint_prop_fee(pool), EInvalidAmount);
-
-        Prop {
-            id: object::new(ctx),
-            type: utf8(type),
-            balance: coin::into_balance(coin)
-        }
-    }
-
-    /// Burns a prop and transfers the balance to the player
-    public fun burn_prop(prop: Prop, pool: &mut Pool, ctx: &mut TxContext): Coin<SUI> {
-        let Prop { id, balance: prop_banlance, type: _ } = prop;
-        object::delete(id);
-
-        let total_amount = balance::value(&prop_banlance);
-        let fee_amount = total_amount * (prop_withdraw_fee(pool) as u64) / 10_000;
-        let fee = balance::split(&mut prop_banlance, fee_amount);
-
-        balance::join(&mut pool.balance, fee);
-
-        let coin = coin::from_balance(prop_banlance, ctx);
         coin
     }
 
-    // /// Stakes props to the pool
-    public fun stake_props(input_props: vector<Prop>, pool: &mut Pool, world: &mut World, ctx: &mut TxContext) {
-        let box = Box {
-            id: object::new(ctx),
-            fees: balance::zero(),
-            index: vector::length(boxes(pool)),
-            size: vector::length(&input_props),
-            activated: false,
-        };
-        let box_address = object::id_address(&box);
+    // ----------Public Functions----------
+    public fun stake(props: vector<Prop>, staker: address, pool: &mut Pool, world: &mut World) {
+        let len = vector::length(&props);
+        let i = 0;
+        while (i < len) {
+            let prop = vector::pop_back(&mut props);
+            check_prop_balance(&prop, world);
 
-        {
-            let player = tx_context::sender(ctx);
-            let box_vec = if (box_map::contains(world, player)) {
-                boxes_from_player(player, world)
-            } else {
-                vector::empty()
-            };
-            vector::push_back(&mut box_vec, box_address);
-            box_map::set(world, player, box_vec);
-        };
+            let type = p::type(&prop);
+            update_pool_prop_count(type, 1, true, world);
+            update_staker_prop_count(type, 1, true, staker, world);
 
-        {
-            let prop_vec = if (prop_map::contains(world, box_address)) {
-                props_from_box(box_address, world)
-            } else {
-                vector::empty()
-            };
-            let i = 0;
-            let len = vector::length(&input_props);
-            while (i < len) {
-                vector::push_back(&mut prop_vec, object::id_address(vector::borrow(&input_props, i)));
-                i = i + 1;
-            };
-            prop_map::set(world, box_address, prop_vec);
-        };
+            update_staker_fees(staker, world);
+            update_last_staker_balance_plus(staker, world);
 
-        vector::append(&mut pool.props, input_props);
-        vector::push_back(boxes_mut(pool), box);
+            let prop_address = object::id_address(&prop);
+            let prop_index = vector::length(&pool.staking_props);
+            pool_map::set(world, prop_address, staker, prop_index);
+            vector::push_back(&mut pool.staking_props, prop);
+
+            i = i + 1;
+        };
+        vector::destroy_empty(props);
     }
 
-    // /// Add props to a box
-    public fun add_props_to_box(input_props: vector<Prop>, box: &Box, pool: &mut Pool, world: &mut World, ctx: &TxContext) {
-        let player = tx_context::sender(ctx);
-        check_box(player, box, world);
-
-        let len = vector::length(&input_props);
-        {
-            let box_address = object::id_address(box);
-            let prop_vec = props_from_box(box_address, world);
-            let i = 0;
-            while (i < len) {
-                let prop = vector::borrow(&input_props, i);
-                let prop_address = object::id_address(prop);
-                vector::push_back(&mut prop_vec, prop_address);
-                i = i + 1;
-            };
-            prop_map::set(world, box_address, prop_vec);
-        };
-
-        {
-            let box = box_mut(box, pool);
-            box.size = box.size + len;
-            box.activated = false;
-        };
-
-        vector::append(&mut pool.props, input_props);
+    public fun unstake(prop_addresses: vector<address>, pool: &mut Pool, world: &mut World, ctx: &TxContext): vector<Prop> {
+        let staker = tx_context::sender(ctx);
+        unstake_friend(prop_addresses, staker, pool, world)
     }
 
-    /// Claim props from a box
-    public fun claim_props_from_box(input_props: &vector<Prop>, box: &Box, pool: &mut Pool, world: &mut World, ctx: &TxContext): vector<Prop> {
-        let player = tx_context::sender(ctx);
-        check_box(player, box, world);
+    public fun mint(type: vector<u8>, fee: Coin<SUI>, world: &mut World, ctx: &mut TxContext): (Prop, Coin<SUI>) {
+        let amount = coin::value(&fee);
+        let mint_prop_fee = pool_schema::get_prop_mint_fee(world);
+        assert!(amount >= mint_prop_fee, EInsufficientCoin);
 
-        let len = vector::length(input_props);
+        let mint_fee = coin::split(&mut fee, mint_prop_fee, ctx);
+        let prop = p::new(type, mint_fee, world, ctx);
+
+        (prop, fee)
+    }
+
+    public fun burn(prop: Prop, pool: &mut Pool, world: &mut World, ctx: &mut TxContext): Coin<SUI> {
+        let fee = calculate_prop_burn_fee(&prop, world);
+        let prop_coin = p::burn(prop, world, ctx);
+        let fee_coin = coin::split(&mut prop_coin, fee, ctx);
+
+        balance::join(&mut pool.balance, coin::into_balance(fee_coin));
+        prop_coin
+    }
+
+    public fun withdraw_to_staker(pool: &mut Pool, world: &mut World, ctx: &mut TxContext): Coin<SUI> {
+        let staker = tx_context::sender(ctx);
+        let fees_plus = staker_fees_plus(staker, world);
+        let fees = staker_map::get_fees(world, staker);
+        let fees_amount = fees + fees_plus;
+        
+        let coin = coin::take(&mut pool.balance, fees_amount, ctx);
+
+        staker_map::set_fees(world, staker, 0);
+
+        let staker_balance_plus = pool_schema::get_staker_balance_plus(world);
+        staker_map::set_last_staker_balance_plus(world, staker, staker_balance_plus);
+
+        let staker_balance = pool_schema::get_staker_balance(world);
+        pool_schema::set_staker_balance(world, staker_balance - fees_amount);
+        pool_schema::set_balance(world, balance::value(&pool.balance));
+        
+        coin
+    }
+
+    public fun withdraw_to_player(card: &mut Card, pool: &mut Pool, world: &mut World, ctx: &mut TxContext): Coin<SUI> {
+        let fees_plus = c::fees_plus(card, world);
+        let fees_amount = c::fees(card) + fees_plus;
+        let coin = coin::take(&mut pool.balance, fees_amount, ctx);
+        let player_balance = pool_schema::get_player_balance(world);
+
+        c::update_fees(fees_amount, false, card);
+        pool_schema::set_player_balance(world, player_balance - fees_amount);
+        pool_schema::set_balance(world, balance::value(&pool.balance));
+
+        coin
+    }
+
+    public fun check_admin(admin_cap: &AdminCap, world: &World) {
+        let admin_id = w::get_admin(world);
+        assert!(admin_id == object::id(admin_cap), ENotAdmin);
+    }
+
+    public fun check_prop_balance(prop: &Prop, world: &World) {
+        assert!(p::balance(prop) < p::min_prop_balance(world), EInsufficientPropBalance);
+    }
+
+    // ----------Friend Functions----------
+    public(friend) fun unstake_friend(prop_addresses: vector<address>, staker: address, pool: &mut Pool, world: &mut World): vector<Prop> {
+        let len = vector::length(&prop_addresses);
+        let i = 0;
         let props = vector::empty<Prop>();
+        while (i < len) {
+            let prop_address = vector::pop_back(&mut prop_addresses);
 
-        {
-            let box_address = object::id_address(box);
-            let i = 0;
-            while (i < len) {
-                let prop = vector::borrow(input_props, i);
+            let (staker_, prop_index) = pool_map::get(world, prop_address);
+            assert!(staker == staker_, ENotPropOwner);
 
-                {
-                    let prop_address = object::id_address(prop);
-                    let prop_vec = props_from_box(box_address, world);
-                    let (in_box, prop_i) = vector::index_of(&prop_vec, &prop_address);
-                    assert!(in_box, ENotProp);
+            let prop = vector::remove(&mut pool.staking_props, prop_index);
+            let type = p::type(&prop);
+            update_pool_prop_count(type, 1, false, world);
+            update_staker_prop_count(type, 1, false, staker, world);
 
-                    vector::remove(&mut prop_vec, prop_i);
-                    prop_map::set(world, box_address, prop_vec);
-                };
+            update_staker_fees(staker, world);
+            update_last_staker_balance_plus(staker, world);
 
-                {
-                    let (_, prop_i) = prop_mut(prop, pool);
+            pool_map::remove(world, prop_address);
+            vector::push_back(&mut props, prop);
 
-                    let prop = vector::remove(props_mut(pool), prop_i);
-                    vector::push_back(&mut props, prop);
-                };
-
-                i = i + 1;
-            };
-        };
-
-        {
-            let box = box_mut(box, pool);
-            box.size = box.size - len;
-            box.activated = false;
+            i = i + 1;
         };
 
         props
     }
 
-    /// Burns a box and transfers the fees to the sender
-    public fun unstake_box(input_props: &vector<Prop>, box: &Box, pool: &mut Pool, world: &mut World, ctx: &mut TxContext): (Coin<SUI>, vector<Prop>) {
-        let props = claim_props_from_box(input_props, box, pool, world, ctx);
-
-        let box_i = box_index(box);
-        let box = vector::remove(boxes_mut(pool), box_i);
-
-        let Box { id, fees, index: _, size: _, activated: _ } = box;
-        object::delete(id);
-
-        let total_amount = balance::value(&fees);
-        let fee_amount = total_amount * (box_burn_fee(pool) as u64) / 10_000;
-        let fee = balance::split(&mut fees, fee_amount);
-
-        balance::join(&mut pool.balance, fee);
-
-        let coin = coin::from_balance(fees, ctx);
-        (coin, props)
+    public fun gaming_props(pool: &Pool): &vector<Prop> {
+        &pool.gaming_props
     }
 
-    // ----------Pool Accessors----------
-    /// Returns the balance of the pool.
-    public fun balance(pool: &Pool): u64 {
-        balance::value(&pool.balance)
+    public(friend) fun gaming_props_mut(pool: &mut Pool): &mut vector<Prop> {
+        &mut pool.gaming_props
     }
 
-    /// Returns the mint_prop_fee of the pool.
-    public fun mint_prop_fee(pool: &Pool): u64 {
-        pool.mint_prop_fee
+    public fun staking_props(pool: &Pool): &vector<Prop> {
+        &pool.staking_props
     }
 
-    /// Returns the game_fee of the pool.
-    public fun game_fee(pool: &Pool): u16 {
-        pool.game_fee
+    public(friend) fun staking_props_mut(pool: &mut Pool): &mut vector<Prop> {
+        &mut pool.staking_props
     }
 
-    /// Returns the deadline_fee of the pool.
-    public fun deadline_fee(pool: &Pool): u16 {
-        pool.deadline_fee
+    public(friend) fun balance(pool: &mut Pool): &mut Balance<SUI> {
+        &mut pool.balance
     }
 
-    /// Returns the prop_withdraw_fee of the pool.
-    public fun prop_withdraw_fee(pool: &Pool): u16 {
-        pool.prop_withdraw_fee
+    public(friend) fun pool_fields(pool: &mut Pool): (&mut Balance<SUI>, &mut vector<Prop>, &mut vector<Prop>) {
+        (&mut pool.balance, &mut pool.staking_props, &mut pool.gaming_props)
     }
 
-    /// Returns the box_burn_fee of the pool.
-    public fun box_burn_fee(pool: &Pool): u16 {
-        pool.box_burn_fee
+    // ----------Helpers----------
+    fun update_pool_prop_count(type: vector<u8>, count: u64, in: bool, world: &mut World) {
+        let prop_count = if (in) {
+            pool_schema::get_prop_count(world) + count
+        } else {
+            pool_schema::get_prop_count(world) - count
+        };
+        pool_schema::set_prop_count(world, prop_count);
+
+        if (type == SCISSORS) {
+            let scissors_count = if (in) {
+                pool_schema::get_scissors_count(world) + count
+            } else {
+                pool_schema::get_scissors_count(world) - count
+            };
+            pool_schema::set_scissors_count(world, scissors_count);
+        };
+
+        if (type == ROCK ) {
+            let rock_count = if (in) {
+                pool_schema::get_rock_count(world) + count
+            } else {
+                pool_schema::get_rock_count(world) - count
+            };
+            pool_schema::set_rock_count(world, rock_count);
+        };
+
+        if (type == PAPER) {
+            let paper_count = if (in) {
+                pool_schema::get_paper_count(world) + count
+            } else {
+                pool_schema::get_paper_count(world) - count
+            };
+            pool_schema::set_paper_count(world, paper_count);
+        };
     }
 
-    /// Returns the stake_fee of the pool.
-    public fun stake_fee(pool: &Pool): u16 {
-        pool.stake_fee
+    fun calculate_prop_burn_fee(prop: &Prop, world: &mut World): u64 {
+        let prop_balance = p::balance(prop);
+        let prop_burn_fee = (pool_schema::get_prop_burn_fee(world) as u64); // 1%
+        let fee_amount = prop_balance * prop_burn_fee / 10_000;
+        let to_player_fee = (pool_schema::get_to_player_fee(world) as u64); // 50%
+        let player_fee = fee_amount * to_player_fee / 10_000;
+
+        let player_balance = pool_schema::get_player_balance(world) + player_fee;
+        pool_schema::set_player_balance(world, player_balance);
+        let player_balance_plus = pool_schema::get_player_balance_plus(world) + player_fee;
+        pool_schema::set_player_balance_plus(world, player_balance_plus);
+
+        let founder_balance = pool_schema::get_founder_balance(world) + fee_amount - player_fee;
+        pool_schema::set_founder_balance(world, founder_balance);
+
+        fee_amount
     }
 
-    public fun props(pool: &Pool): &vector<Prop> {
-        &pool.props
+    fun staker_fees_plus(staker: address, world: &World): u64 {
+        // pool balance plus
+        let staker_balance_plus = pool_schema::get_staker_balance_plus(world);
+        let prop_count = pool_schema::get_prop_count(world);
+
+        // last staker balance plus
+        let last_staker_balance_plus = staker_map::get_last_staker_balance_plus(world, staker);
+        let size = staker_map::get_size(world, staker);
+
+        let fees_plus = (staker_balance_plus - last_staker_balance_plus) * size / prop_count;
+        fees_plus
     }
 
-    // ----------Pool Helpers----------
-    public fun check_box(player: address, box: &Box, world: &World){
-        let box_vec = boxes_from_player(player, world);
-        let box_address = object::id_address(box);
-        let in_box_vec = vector::contains(&box_vec, &box_address);
-        assert!(in_box_vec, ENotBoxCap);
+    fun update_staker_prop_count(type: vector<u8>, count: u64, in: bool, staker: address, world: &mut World) {
+        let prop_count = if (in) {
+            staker_map::get_size(world, staker) + count
+        } else {
+            staker_map::get_size(world, staker) - count
+        };
+        staker_map::set_size(world, staker, prop_count);
+
+        if (type == SCISSORS) {
+            let scissors_count = if (in) {
+                staker_map::get_scissors_count(world, staker) + count
+            } else {
+                staker_map::get_scissors_count(world, staker) - count
+            };
+            staker_map::set_scissors_count(world, staker, scissors_count);
+        };
+
+        if (type == ROCK ) {
+            let rock_count = if (in) {
+                staker_map::get_rock_count(world, staker) + count
+            } else {
+                staker_map::get_rock_count(world, staker) - count
+            };
+            staker_map::set_rock_count(world, staker, rock_count);
+        };
+
+        if (type == PAPER) {
+            let paper_count = if (in) {
+                staker_map::get_paper_count(world, staker) + count
+            } else {
+                staker_map::get_paper_count(world, staker) - count
+            };
+            staker_map::set_paper_count(world, staker, paper_count);
+        };
     }
 
-    // ----------Prop Accessors----------
-    public fun prop_type(prop: &Prop): &String {
-        &prop.type
+    fun update_staker_fees(staker: address, world: &mut World) {
+        let fees_plus = staker_fees_plus(staker, world);
+        let fees = staker_map::get_fees(world, staker);
+        staker_map::set_fees(world, staker, fees + fees_plus);
     }
 
-    public fun props_from_box(box: address, world: &World): vector<address> {
-        prop_map::get(world, box)
-    }
-
-    public fun props_mut(pool: &mut Pool): &mut vector<Prop> {
-        &mut pool.props
-    }
-
-    public fun prop_mut(prop: &Prop, pool: &mut Pool): (&mut Prop, u64) {
-        let (in_props, index) = vector::index_of(props(pool), prop);
-        assert!(in_props, ENotProp);
-
-        (vector::borrow_mut(props_mut(pool), index), index)
-    }
-
-    // ----------Box Accessors----------
-    public fun boxes_from_player(player: address, world: &World): vector<address> {
-        box_map::get(world, player)
-    }
-
-    public fun boxes(pool: &Pool): &vector<Box> {
-        &pool.boxes
-    }
-
-    public fun boxes_mut(pool: &mut Pool): &mut vector<Box> {
-        &mut pool.boxes
-    }
-
-    public fun box_mut(box: &Box, pool: &mut Pool): &mut Box {
-        let index = box_index(box);
-        vector::borrow_mut(boxes_mut(pool), index)
-    }
-
-    public fun box_fees(box: &Box): u64 {
-        balance::value(&box.fees)
-    }
-
-    public fun box_index(box: &Box): u64 {
-        box.index
-    }
-
-    public fun box_size(box: &Box): u64 {
-        box.size
-    }
-
-    public fun box_activated(box: &Box): bool {
-        box.activated
-    }
-
-    // ----------Pool Tests----------
-    #[test_only]
-    public fun init_for_testing(ctx: &mut TxContext) {
-        init(POOL_SYSTEM {}, ctx);
+    fun update_last_staker_balance_plus(staker: address, world: &mut World) {
+        let staker_balance_plus = pool_schema::get_staker_balance_plus(world);
+        staker_map::set_last_staker_balance_plus(world, staker, staker_balance_plus);
     }
 }

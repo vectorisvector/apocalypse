@@ -1,13 +1,18 @@
 {
   "editor.formatOnSave": true,
+  "css.lint.unknownAtRules": "ignore",
   "cSpell.words": [
     "0xobelisk",
     "devnet",
     "localnet",
     "localnode",
+    "mysten",
     "nohup",
     "schemagen",
     "tailwindcss",
     "worldgen"
-  ]
+  ],
+  "sui-move-analyzer.inlay.hints.parameter": false,
+  "sui-move-analyzer.inlay.hints.field.type": false,
+  "sui-move-analyzer.inlay.hints.declare.var": false
 }
