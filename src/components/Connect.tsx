@@ -1,21 +1,49 @@
+"use client";
+
 import { useState } from "react";
-import { ConnectModal, useCurrentAccount } from "@mysten/dapp-kit";
-import { obelisk } from "@/utils/oblisk";
+import { truncateAddress } from "@/utils/helper";
+import { useCurrentAccount, useDisconnectWallet } from "@mysten/dapp-kit";
+
+import ConnectModal from "./ConnectModal";
 
 export default function Connect() {
-  const currentAccount = useCurrentAccount();
-  const [open, setOpen] = useState(false);
+  const [showModal, setShowModal] = useState(false);
+
+  const account = useCurrentAccount();
+  const { mutate: disconnect } = useDisconnectWallet();
 
   return (
-    <ConnectModal
-      trigger={
-        <button disabled={!!currentAccount}>
-          {" "}
-          {currentAccount ? "Connected" : "Connect"}
+    <>
+      <ConnectModal
+        isOpen={showModal}
+        closeModal={() => setShowModal(false)}
+      />
+
+      {account ? (
+        <div className="dropdown dropdown-end dropdown-hover">
+          <label
+            tabIndex={0}
+            className="btn btn-neutral"
+          >
+            {truncateAddress(account.address)}
+          </label>
+          <ul
+            tabIndex={0}
+            className="menu dropdown-content rounded-box z-[1] w-40 bg-base-100 p-2 shadow"
+          >
+            <li onClick={() => disconnect()}>
+              <a>disconnect</a>
+            </li>
+          </ul>
+        </div>
+      ) : (
+        <button
+          className="btn btn-primary"
+          onClick={() => setShowModal(true)}
+        >
+          Connect
         </button>
-      }
-      open={open}
-      onOpenChange={(isOpen) => setOpen(isOpen)}
-    />
+      )}
+    </>
   );
 }

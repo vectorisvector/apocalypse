@@ -1,46 +1,52 @@
 "use client";
 
-import Connect from "@/components/Connect";
+import Header from "@/components/Header";
 import {
   createNetworkConfig,
   SuiClientProvider,
   WalletProvider,
 } from "@mysten/dapp-kit";
-import { getFullnodeUrl, type SuiClientOptions } from "@mysten/sui.js/client";
+import { getFullnodeUrl } from "@mysten/sui.js/client";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 
-// Config options for the networks you want to connect to
+import Test from "./test";
+
 const { networkConfig } = createNetworkConfig({
   localnet: { url: getFullnodeUrl("localnet") },
+  devnet: { url: getFullnodeUrl("devnet") },
+  testnet: { url: getFullnodeUrl("testnet") },
   mainnet: { url: getFullnodeUrl("mainnet") },
 });
 const queryClient = new QueryClient();
 
 export default function Home() {
-  const [page, setPage] = useState<JSX.Element>();
+  let [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
-    setPage(
+    if (typeof window !== "undefined") {
+      setIsClient(true);
+    }
+  }, []);
+
+  return (
+    isClient && (
       <QueryClientProvider client={queryClient}>
         <SuiClientProvider
           networks={networkConfig}
-          defaultNetwork="localnet"
+          defaultNetwork="devnet"
         >
-          <WalletProvider>
-            <header className=" flex h-20 items-center justify-between px-10">
-              <div className=" text-center text-4xl">Apocalypse</div>
-              <Connect />
-            </header>
+          <WalletProvider autoConnect>
+            <Header />
 
             <main>
-              <div className=" mx-auto flex max-w-7xl flex-col py-10"></div>
+              <div className=" mx-auto flex max-w-7xl flex-col py-10">
+                <Test />
+              </div>
             </main>
           </WalletProvider>
         </SuiClientProvider>
-      </QueryClientProvider>,
-    );
-  }, []);
-
-  return page ?? "";
+      </QueryClientProvider>
+    )
+  );
 }

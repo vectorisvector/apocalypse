@@ -21,8 +21,8 @@ module apocalypse::pool_system {
     // ----------Errors----------
     const ENotAdmin: u64 = 0;
     const EInsufficientCoin: u64 = 1;
-    const EInsufficientPropBalance: u64 = 3;
-    const ENotPropOwner: u64 = 4;
+    const EInsufficientPropBalance: u64 = 2;
+    const ENotPropOwner: u64 = 3;
 
     // ----------Consts----------
     const SCISSORS: vector<u8> = b"scissors";
@@ -108,9 +108,18 @@ module apocalypse::pool_system {
         vector::destroy_empty(props);
     }
 
-    public fun unstake(prop_addresses: vector<address>, pool: &mut Pool, world: &mut World, ctx: &TxContext): vector<Prop> {
+    public fun unstake(prop_addresses: vector<address>, pool: &mut Pool, world: &mut World, ctx: &TxContext){
         let staker = tx_context::sender(ctx);
-        unstake_friend(prop_addresses, staker, pool, world)
+        let props = unstake_friend(prop_addresses, staker, pool, world);
+        let len = vector::length(&props);
+        let i = 0;
+        while (i < len) {
+            let prop = vector::pop_back(&mut props);
+            transfer::public_transfer(prop, staker);
+
+            i = i + 1;
+        };
+        vector::destroy_empty(props);
     }
 
     public fun mint(type: vector<u8>, fee: Coin<SUI>, world: &mut World, ctx: &mut TxContext): (Prop, Coin<SUI>) {
@@ -172,7 +181,7 @@ module apocalypse::pool_system {
     }
 
     public fun check_prop_balance(prop: &Prop, world: &World) {
-        assert!(p::balance(prop) < p::min_prop_balance(world), EInsufficientPropBalance);
+        assert!(p::balance(prop) > p::min_prop_balance(world), EInsufficientPropBalance);
     }
 
     // ----------Friend Functions----------
@@ -188,10 +197,10 @@ module apocalypse::pool_system {
 
             let prop = vector::remove(&mut pool.staking_props, prop_index);
             let type = p::type(&prop);
-            update_pool_prop_count(type, 1, false, world);
-            update_staker_prop_count(type, 1, false, staker, world);
 
             update_staker_fees(staker, world);
+            update_pool_prop_count(type, 1, false, world);
+            update_staker_prop_count(type, 1, false, staker, world);
             update_last_staker_balance_plus(staker, world);
 
             pool_map::remove(world, prop_address);
@@ -296,6 +305,10 @@ module apocalypse::pool_system {
     }
 
     fun update_staker_prop_count(type: vector<u8>, count: u64, in: bool, staker: address, world: &mut World) {
+        if (!staker_map::contains(world, staker)) {
+            staker_map::set(world, staker, 0, 0, 0, 0, 0, 0)
+        };
+
         let prop_count = if (in) {
             staker_map::get_size(world, staker) + count
         } else {
@@ -340,5 +353,11 @@ module apocalypse::pool_system {
     fun update_last_staker_balance_plus(staker: address, world: &mut World) {
         let staker_balance_plus = pool_schema::get_staker_balance_plus(world);
         staker_map::set_last_staker_balance_plus(world, staker, staker_balance_plus);
+    }
+
+    // ----------Tests----------
+    #[test_only]
+    public fun init_for_testing(ctx: &mut TxContext) {
+        init(POOL_SYSTEM {}, ctx);
     }
 }

@@ -71,8 +71,8 @@ module apocalypse::prop_system {
     }
 
     public fun min_prop_balance(world: &World): u64 {
-        let prop_mint_fee = pool::get_prop_mint_fee(world);
-        let min_prop_fee = (pool::get_min_prop_fee(world) as u64);
+        let prop_mint_fee = pool::get_prop_mint_fee(world); // 2 sui
+        let min_prop_fee = (pool::get_min_prop_fee(world) as u64); // 80%
         prop_mint_fee * min_prop_fee / 10_000
     }
 

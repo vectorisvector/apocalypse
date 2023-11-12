@@ -7,9 +7,18 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
+    "launch": "pnpm run localnode && next dev -p 9000",
     "worldgen": "obelisk schemagen obelisk.config.ts",
-    "localnode": "sh dev.sh",
-    "launch": "sh dev.sh && next dev -p 9000"
+    "localnet": "sh dev.sh localnet",
+    "devnet": "sh dev.sh devnet",
+    "testnet": "sh dev.sh testnet",
+    "mainnet": "sh dev.sh mainnet",
+    "local-faucet": "obelisk faucet --network localnet",
+    "dev-faucet": "obelisk faucet --network devnet",
+    "test-faucet": "obelisk faucet --network testnet",
+    "main-faucet": "obelisk faucet --network mainnet",
+    "generateAccount": "ts-node scripts/generateAccount.ts",
+    "test": "ts-node src/utils/test.ts"
   },
   "dependencies": {
     "@0xobelisk/cli": "^0.4.8",
@@ -18,17 +27,20 @@
     "@headlessui/react": "^1.7.17",
     "@mysten/dapp-kit": "^0.7.0",
     "@mysten/sui.js": "^0.45.1",
-    "@suiet/wallet-kit": "^0.2.20",
+    "@noble/hashes": "^1.3.2",
     "@tanstack/react-query": "^5.8.1",
+    "dotenv": "^16.3.1",
     "next": "14.0.1",
     "react": "^18",
-    "react-dom": "^18"
+    "react-dom": "^18",
+    "theme-change": "^2.5.0"
   },
   "devDependencies": {
     "@types/node": "^20",
     "@types/react": "^18",
     "@types/react-dom": "^18",
     "autoprefixer": "^10.0.1",
+    "daisyui": "^3.9.4",
     "eslint": "^8",
     "eslint-config-next": "14.0.1",
     "postcss": "^8",

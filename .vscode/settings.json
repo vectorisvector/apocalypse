@@ -3,9 +3,12 @@
   "css.lint.unknownAtRules": "ignore",
   "cSpell.words": [
     "0xobelisk",
+    "daisyui",
     "devnet",
     "Fullnode",
     "headlessui",
+    "Keypair",
+    "keypairs",
     "localnet",
     "localnode",
     "mysten",
@@ -14,6 +17,7 @@
     "suiet",
     "tailwindcss",
     "tanstack",
+    "unstake",
     "worldgen"
   ],
   "sui-move-analyzer.inlay.hints.parameter": false,
