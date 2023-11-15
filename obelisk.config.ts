@@ -1,4 +1,6 @@
-export const obeliskConfig = {
+import { ObeliskConfig } from "@0xobelisk/sui-common";
+
+export const obeliskConfig: ObeliskConfig = {
   name: "apocalypse",
   description: "Apocalypse game on the chain",
   systems: [
@@ -41,11 +43,11 @@ export const obeliskConfig = {
         player_balance_plus: "u64",
         founder_balance: "u64",
         prop_mint_fee: "u64",
-        game_fee: "u16",
-        min_prop_fee: "u16",
-        prop_burn_fee: "u16",
-        to_staker_fee: "u16",
-        to_player_fee: "u16",
+        game_fee: "u64",
+        min_prop_fee: "u64",
+        prop_burn_fee: "u64",
+        to_staker_fee: "u64",
+        to_player_fee: "u64",
         scissors_count: "u64",
         rock_count: "u64",
         paper_count: "u64",

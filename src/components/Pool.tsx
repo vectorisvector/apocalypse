@@ -1,4 +1,4 @@
-import { useGlobal, usePool } from "@/utils/swr";
+import { useGlobal, usePool } from "@/utils/service";
 
 export default function Pool() {
   const pool = usePool();

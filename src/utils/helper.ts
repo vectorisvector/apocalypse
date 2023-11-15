@@ -27,3 +27,22 @@ export function mistToSui(mist: number | string, decimal: number = 2): string {
   const sui = v.div(MIST_PER_SUI.toString()).toFixed(decimal);
   return sui;
 }
+
+/**
+ * Converts an array of 8 numbers representing a 64-bit unsigned integer to a string.
+ *
+ * @param u64 - An array of 8 numbers representing a 64-bit unsigned integer.
+ * @returns A string representation of the 64-bit unsigned integer.
+ */
+export function u64ToString(u64: number[]): string {
+  const buffer = new ArrayBuffer(8);
+  const byteView = new Uint8Array(buffer);
+  for (let i = 0; i < 8; i++) {
+    byteView[i] = u64[i];
+  }
+
+  const dataView = new DataView(buffer);
+  const u64Value = dataView.getBigUint64(0, true);
+
+  return u64Value.toString();
+}

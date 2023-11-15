@@ -11,7 +11,7 @@ export const randomness_schema =
   "0x511ed03e24716fa3f7e478a9fcc9900baa4e7e0b868377b9760e0598e8596079";
 
 export const staker_map_schema =
-  "0x6a6f6b84dca9a077ec8e37a8f0a1cda09502b22b21d4de7fc948086ead1662c0";
+  "0xa7c48bb2d779015a288f781539ca2177d508bcdd8d807666aeda36caef48d297";
 
 export const game_map_schema =
   "0x52969c437907065ebbb291410224efadd8bf4e22318656fc1c94522fe58dabe0";
@@ -20,7 +20,7 @@ export const card_map_schema =
   "0x52c7718a09cc24645be99e8b2a5f07c93ef928203f888f91481dba8b73e57159";
 
 export const pool_map_schema =
-  "0xccb47e6ba92179cefd6424f726f947bf508e41a23a9c216993d577e63906d056";
+  "0xaeabe4b608bb7d7e5a3be044332690ecc0c6d06fd23f5c88ed9ff3ac08019de3";
 
 export const pool_schema =
   "0x19f195de6d6762707a54d1cbf984b6c343d38692eee485aaeddb076b6da2be8f";

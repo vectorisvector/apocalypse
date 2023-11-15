@@ -1,7 +1,7 @@
 import { Fragment } from "react";
 import { Dialog, Transition } from "@headlessui/react";
-import { useConnectWallet, useWallets } from "@mysten/dapp-kit";
 import Image from "next/image";
+import { useWallet } from "@suiet/wallet-kit";
 
 interface ConnectModalProps {
   isOpen: boolean;
@@ -11,10 +11,7 @@ export default function ConnectModal({
   isOpen,
   closeModal,
 }: ConnectModalProps) {
-  const wallets = useWallets();
-  const { mutate: connect } = useConnectWallet({
-    onSuccess: closeModal,
-  });
+  const { allAvailableWallets, select } = useWallet();
 
   return (
     <Transition
@@ -50,7 +47,7 @@ export default function ConnectModal({
               leaveFrom="opacity-100 scale-100"
               leaveTo="opacity-0 scale-95"
             >
-              <Dialog.Panel className="w-80 transform overflow-hidden rounded-2xl bg-white p-2 text-left shadow-xl transition-all">
+              <Dialog.Panel className="w-80 transform overflow-hidden rounded-2xl bg-base-100 p-2 text-left shadow-xl transition-all">
                 <Dialog.Title
                   as="h3"
                   className=" text-center text-lg font-medium leading-10"
@@ -59,21 +56,19 @@ export default function ConnectModal({
                 </Dialog.Title>
 
                 <ul className=" flex flex-col gap-2 py-4">
-                  {wallets.map((wallet) => (
+                  {allAvailableWallets.map((wallet) => (
                     <li
                       key={wallet.name}
-                      className=" flex h-12 cursor-pointer items-center gap-1 rounded-full px-4 transition-all hover:bg-base-100"
+                      className=" flex h-12 cursor-pointer items-center gap-2 rounded-full px-4 transition-all hover:bg-base-300"
                       onClick={() =>
-                        connect({
-                          wallet,
-                        })
+                        wallet.installed && select(wallet.name).then(closeModal)
                       }
                     >
                       <Image
-                        src={wallet.icon}
+                        src={wallet.iconUrl}
                         alt={wallet.name}
-                        width={20}
-                        height={20}
+                        width={30}
+                        height={30}
                       />
                       <span>{wallet.name}</span>
                     </li>

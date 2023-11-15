@@ -59,7 +59,7 @@ export default function InputModal({
               leaveFrom="opacity-100 scale-100"
               leaveTo="opacity-0 scale-95"
             >
-              <Dialog.Panel className="w-80 transform overflow-hidden rounded-2xl bg-white p-4 text-left shadow-xl transition-all">
+              <Dialog.Panel className="w-80 transform overflow-hidden rounded-2xl bg-base-100 p-4 text-left shadow-xl transition-all">
                 <Dialog.Title
                   as="h3"
                   className=" text-center text-lg font-medium leading-10"

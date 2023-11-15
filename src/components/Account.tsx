@@ -1,28 +1,35 @@
 import InputModal from "@/components/InputModal";
 import { PropType } from "@/types/type";
 import { truncateAddress } from "@/utils/helper";
-import { useAccountProps, useBurn, useMint } from "@/utils/swr";
-import { useCurrentAccount } from "@mysten/dapp-kit";
+import {
+  useAccountProps,
+  useBurn,
+  useMint,
+  useStake,
+  useStakingProps,
+} from "@/utils/service";
+import { useWallet } from "@suiet/wallet-kit";
 import { useCallback, useMemo, useState } from "react";
+
+type actionType = "mint" | "burn" | "stake";
 
 export default function Account() {
   const [isOpen, setIsOpen] = useState(false);
   const [maxCount, setMaxCount] = useState(100);
-  const [type, setType] = useState<"mint" | "burn" | "staking">("mint");
+  const [type, setType] = useState<actionType>("mint");
   const [propType, setPropType] = useState<PropType>("rock");
 
-  const account = useCurrentAccount();
-  const props = useAccountProps(account?.address);
+  const wallet = useWallet();
+  const props = useAccountProps(wallet.address);
+
+  const stakerData = useStakingProps(wallet.address);
 
   const { mint } = useMint();
   const { burn } = useBurn();
+  const { stake } = useStake();
 
   const handleModal = useCallback(
-    (
-      type: "mint" | "burn" | "staking",
-      propType: PropType,
-      maxCount: number = 100,
-    ) => {
+    (type: actionType, propType: PropType, maxCount: number = 100) => {
       setMaxCount(maxCount);
       setType(type);
       setPropType(propType);
@@ -44,16 +51,16 @@ export default function Account() {
   }, [props?.paper.length]);
 
   const stakingRock = useMemo(() => {
-    return props?.rock.length ?? 0;
-  }, [props?.rock.length]);
+    return stakerData.rock_count;
+  }, [stakerData.rock_count]);
 
   const stakingScissors = useMemo(() => {
-    return props?.scissors.length ?? 0;
-  }, [props?.scissors.length]);
+    return stakerData.scissors_count;
+  }, [stakerData.scissors_count]);
 
   const stakingPaper = useMemo(() => {
-    return props?.paper.length ?? 0;
-  }, [props?.paper.length]);
+    return stakerData.paper_count;
+  }, [stakerData.paper_count]);
 
   const handleConfirm = useCallback(
     (count: number) => {
@@ -66,9 +73,13 @@ export default function Account() {
         burn({
           propIds: props[propType].slice(0, count),
         });
+      } else if (type === "stake") {
+        stake({
+          propIds: props[propType].slice(0, count),
+        });
       }
     },
-    [burn, mint, propType, props, type],
+    [burn, mint, propType, props, stake, type],
   );
 
   return (
@@ -80,10 +91,10 @@ export default function Account() {
         onConfirm={handleConfirm}
       />
 
-      {account && (
+      {wallet.address && (
         <div className=" flex flex-col items-center gap-4">
           <h2 className=" text-3xl font-bold">
-            Account {truncateAddress(account.address)}
+            Account {truncateAddress(wallet.address)}
           </h2>
           <div className=" stats flex w-full shadow">
             <div className="stat relative">
@@ -119,7 +130,16 @@ export default function Account() {
                 <div className=" flex flex-col text-right">
                   <div className="stat-value text-primary">{stakingRock}</div>
                   <div className="stat-desc">staking</div>
-                  <button className=" btn btn-primary btn-sm mt-2">
+                  <button
+                    className=" btn btn-primary btn-sm mt-2"
+                    onClick={() =>
+                      handleModal(
+                        "stake",
+                        "rock",
+                        propsRock > 100 ? 100 : propsRock,
+                      )
+                    }
+                  >
                     stake
                   </button>
                 </div>
@@ -163,7 +183,16 @@ export default function Account() {
                     {stakingScissors}
                   </div>
                   <div className="stat-desc">staking</div>
-                  <button className=" btn btn-secondary btn-sm mt-2">
+                  <button
+                    className=" btn btn-secondary btn-sm mt-2"
+                    onClick={() =>
+                      handleModal(
+                        "stake",
+                        "scissors",
+                        propsScissors > 100 ? 100 : propsScissors,
+                      )
+                    }
+                  >
                     stake
                   </button>
                 </div>
@@ -203,7 +232,18 @@ export default function Account() {
                 <div className=" flex flex-col text-right">
                   <div className="stat-value text-accent">{stakingPaper}</div>
                   <div className="stat-desc">staking</div>
-                  <button className=" btn btn-accent btn-sm mt-2">stake</button>
+                  <button
+                    className=" btn btn-accent btn-sm mt-2"
+                    onClick={() =>
+                      handleModal(
+                        "stake",
+                        "paper",
+                        propsPaper > 100 ? 100 : propsPaper,
+                      )
+                    }
+                  >
+                    stake
+                  </button>
                 </div>
               </div>
             </div>
