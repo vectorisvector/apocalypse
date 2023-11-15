@@ -39,3 +39,17 @@ export interface Global {
 }
 
 export type PropType = "scissors" | "rock" | "paper";
+
+export interface Prop {
+  balance: string;
+  type: PropType;
+  id: {
+    id: string;
+  };
+}
+
+export interface Props {
+  scissors: string[];
+  rock: string[];
+  paper: string[];
+}

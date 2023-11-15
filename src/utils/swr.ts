@@ -1,8 +1,14 @@
 import useSWR from "swr";
 import useSWRMutation from "swr/mutation";
-import { global_schema, packageId, pool_schema, world } from "./config";
+import { global_schema, packageId, pool, pool_schema, world } from "./config";
 import { suiClient } from "./sui";
-import { GlobalWrapper, PoolWrapper, PropType } from "@/types/type";
+import {
+  GlobalWrapper,
+  PoolWrapper,
+  Prop,
+  PropType,
+  Props,
+} from "@/types/type";
 import {
   useCurrentAccount,
   useSignAndExecuteTransactionBlock,
@@ -67,7 +73,7 @@ export const useGlobal = () => {
   }
 };
 
-export const useAccountData = (address?: string) => {
+export const useAccountProps = (address?: string) => {
   const { data } = useSWR(
     address + "/accountData",
     () => {
@@ -86,13 +92,20 @@ export const useAccountData = (address?: string) => {
     },
     { refreshInterval: 10_000 },
   );
-  console.log(data);
 
-  return data?.map(({ data }) => {
+  const props: Props = {
+    scissors: [],
+    rock: [],
+    paper: [],
+  };
+
+  data?.forEach(({ data }) => {
     if (data?.content?.dataType === "moveObject") {
-      // return (data.content.fields as unknown as GlobalWrapper).value.fields;
+      const prop = data.content.fields as unknown as Prop;
+      props[prop.type].push(prop.id.id);
     }
   });
+  return props;
 };
 
 export const useMint = () => {
@@ -117,6 +130,7 @@ export const useMint = () => {
       if (!account) return;
 
       const txb = new TransactionBlock();
+
       for (let i = 0; i < count; i++) {
         const [coin] = txb.splitCoins(txb.gas, [2n * MIST_PER_SUI]);
         const [prop, coin_] = txb.moveCall({
@@ -144,5 +158,56 @@ export const useMint = () => {
 
   return {
     mint: trigger,
+  };
+};
+
+export const useBurn = () => {
+  const account = useCurrentAccount();
+
+  const { mutate: signAndExecuteTransactionBlock } =
+    useSignAndExecuteTransactionBlock();
+
+  const { trigger } = useSWRMutation(
+    "mint",
+    (
+      _,
+      {
+        arg: { propIds },
+      }: {
+        arg: {
+          propIds: string[];
+        };
+      },
+    ) => {
+      if (!account) return;
+
+      const txb = new TransactionBlock();
+
+      for (const propId of propIds) {
+        const coin = txb.moveCall({
+          target: `${packageId}::pool_system::burn`,
+          arguments: [txb.object(propId), txb.object(pool), txb.object(world)],
+        });
+        txb.transferObjects([coin], account.address);
+      }
+
+      signAndExecuteTransactionBlock(
+        {
+          transactionBlock: txb,
+        },
+        {
+          onSuccess: (result) => {
+            console.log("executed transaction block", result);
+          },
+          onError: (error) => {
+            console.error("failed to execute transaction block", error);
+          },
+        },
+      );
+    },
+  );
+
+  return {
+    burn: trigger,
   };
 };
