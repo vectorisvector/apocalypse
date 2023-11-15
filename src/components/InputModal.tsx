@@ -82,7 +82,7 @@ export default function InputModal({
                   <button
                     className=" btn btn-primary w-full"
                     disabled={isError || count <= 0}
-                    onClick={() => confirm}
+                    onClick={confirm}
                   >
                     Confirm
                   </button>
