@@ -6,7 +6,6 @@ import { hexToBytes } from "@noble/hashes/utils";
 import "dotenv/config";
 
 import objectData from "./config";
-import { bcs } from "@mysten/sui.js/bcs";
 
 const rpcUrl = getFullnodeUrl("devnet");
 const client = new SuiClient({ url: rpcUrl });
@@ -97,13 +96,13 @@ function unstake() {
 }
 
 async function main() {
-  // const txb = mint({
-  //   scissors: 1,
-  //   rock: 1,
-  //   paper: 1,
-  // });
+  const txb = mint({
+    scissors: 1,
+    rock: 1,
+    paper: 1,
+  });
 
-  const txb = burn();
+  // const txb = burn();
 
   // const txb = stake();
 

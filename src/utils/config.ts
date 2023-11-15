@@ -1,14 +1,17 @@
-export const pool_schema =
-  "0x004ecff566a1ca58b2e71056c6b4d75f3d7170e304f6f1425e824aa5cf5691ba";
-
 export const publisher =
-  "0x032cdf8e83a68797221ccf3354e88ff4ec3ebc5d200dc1cad41ce39d01853954";
+  "0xb181abb4071ae52708a2709af6b4d50e81bbc880b5c07530d5b8314bf6f939ed";
 
 export const upgradeCap =
-  "0x23a9cadcb1e9e06e41dd3dfdec5d80d753b02769680f49aac5b5b4916ca68503";
+  "0x308574876b522dd8c480a512b47aa7f438c9e7b0b9bc2f788ac5b3ebe5e8d382";
+
+export const adminCap =
+  "0x23d3659db737db94dd33d2879d8f1de2bf368b18a1c94c3ef6483ccb415f9e13";
 
 export const randomness_schema =
   "0x511ed03e24716fa3f7e478a9fcc9900baa4e7e0b868377b9760e0598e8596079";
+
+export const staker_map_schema =
+  "0x6a6f6b84dca9a077ec8e37a8f0a1cda09502b22b21d4de7fc948086ead1662c0";
 
 export const game_map_schema =
   "0x52969c437907065ebbb291410224efadd8bf4e22318656fc1c94522fe58dabe0";
@@ -16,17 +19,14 @@ export const game_map_schema =
 export const card_map_schema =
   "0x52c7718a09cc24645be99e8b2a5f07c93ef928203f888f91481dba8b73e57159";
 
-export const adminCap =
-  "0xc697e55184f82ecaed0c852ffdfb85829e9d8239d63b97f22a480281014d7f41";
-
 export const pool_map_schema =
   "0xccb47e6ba92179cefd6424f726f947bf508e41a23a9c216993d577e63906d056";
 
-export const staker_map_schema =
-  "0xe2b060a98ed3db06a5b25eb54e676cc97c450f822c8ac3155abde1302e45daf3";
+export const pool_schema =
+  "0x31e4a4a8fb02ac225004a31c2ab6b68b77113936242074770f598d378f450448";
 
 export const global_schema =
-  "0xf58ebf68a9699bf22936f122fb17247309af3ab87d0ef415a79f87958fe3ad10";
+  "0xeeb17310ae085203b519b8deec36129e5b778b0e3f5f94639a8d3aed58f5adf9";
 
 export const pool =
   "0xdb6266142e7d7e9deb3f8ca6fc6c97bb16cdc79a2c4c9a8c215cd9bf1bdc9bd9";

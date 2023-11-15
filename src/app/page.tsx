@@ -9,8 +9,7 @@ import {
 import { getFullnodeUrl } from "@mysten/sui.js/client";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
-
-import Test from "./test";
+import Content from "./components/Content";
 
 const { networkConfig } = createNetworkConfig({
   localnet: { url: getFullnodeUrl("localnet") },
@@ -39,10 +38,8 @@ export default function Home() {
           <WalletProvider autoConnect>
             <Header />
 
-            <main>
-              <div className=" mx-auto flex max-w-7xl flex-col py-10">
-                <Test />
-              </div>
+            <main className=" mx-auto flex max-w-7xl flex-col py-10">
+              <Content />
             </main>
           </WalletProvider>
         </SuiClientProvider>

@@ -6,7 +6,6 @@ import {
 import { SuiClient, getFullnodeUrl } from "@mysten/sui.js/client";
 import { TransactionBlock } from "@mysten/sui.js/transactions";
 import { bcs } from "@mysten/sui.js/bcs";
-
 import objectData from "@/utils/config";
 
 const rpcUrl = getFullnodeUrl("devnet");

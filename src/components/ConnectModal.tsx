@@ -1,6 +1,7 @@
 import { Fragment } from "react";
 import { Dialog, Transition } from "@headlessui/react";
 import { useConnectWallet, useWallets } from "@mysten/dapp-kit";
+import Image from "next/image";
 
 interface ConnectModalProps {
   isOpen: boolean;
@@ -49,26 +50,32 @@ export default function ConnectModal({
               leaveFrom="opacity-100 scale-100"
               leaveTo="opacity-0 scale-95"
             >
-              <Dialog.Panel className="w-full max-w-md transform overflow-hidden rounded-2xl bg-white p-6 text-left align-middle shadow-xl transition-all">
+              <Dialog.Panel className="w-80 transform overflow-hidden rounded-2xl bg-white p-2 text-left shadow-xl transition-all">
                 <Dialog.Title
                   as="h3"
-                  className="text-lg font-medium leading-6 text-gray-900"
+                  className=" text-center text-lg font-medium leading-10"
                 >
                   Select Wallet
                 </Dialog.Title>
 
-                <ul>
+                <ul className=" flex flex-col gap-2 py-4">
                   {wallets.map((wallet) => (
                     <li
                       key={wallet.name}
-                      className=" leading-10"
+                      className=" flex h-12 cursor-pointer items-center gap-1 rounded-full px-4 transition-all hover:bg-base-100"
                       onClick={() =>
                         connect({
                           wallet,
                         })
                       }
                     >
-                      {wallet.name}
+                      <Image
+                        src={wallet.icon}
+                        alt={wallet.name}
+                        width={20}
+                        height={20}
+                      />
+                      <span>{wallet.name}</span>
                     </li>
                   ))}
                 </ul>
