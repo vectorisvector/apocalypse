@@ -89,16 +89,16 @@ module apocalypse::pool_system {
         let i = 0;
         while (i < len) {
             let prop = vector::pop_back(&mut props);
+            let prop_address = object::id_address(&prop);
             check_prop_balance(&prop, world);
 
             let type = p::type(&prop);
             update_pool_prop_count(type, 1, true, world);
-            update_staker_prop_count(type, 1, true, staker, world);
+            update_staker_prop_count(type, prop_address, 1, true, staker, world);
 
             update_staker_fees(staker, world);
             update_last_staker_balance_plus(staker, world);
 
-            let prop_address = object::id_address(&prop);
             let prop_index = vector::length(&pool.staking_props);
             pool_map::set(world, prop_address, staker, prop_index);
             vector::push_back(&mut pool.staking_props, prop);
@@ -204,7 +204,7 @@ module apocalypse::pool_system {
 
             update_staker_fees(staker, world);
             update_pool_prop_count(type, 1, false, world);
-            update_staker_prop_count(type, 1, false, staker, world);
+            update_staker_prop_count(type, prop_address, 1, false, staker, world);
             update_last_staker_balance_plus(staker, world);
 
             pool_map::remove(world, prop_address);
@@ -308,9 +308,16 @@ module apocalypse::pool_system {
         fees_plus
     }
 
-    fun update_staker_prop_count(type: vector<u8>, count: u64, in: bool, staker: address, world: &mut World) {
+    fun update_staker_prop_count(type: vector<u8>, prop_address: address, count: u64, in: bool, staker: address, world: &mut World) {
         if (!staker_map::contains(world, staker)) {
-            staker_map::set(world, staker, 0, 0, 0, 0, 0, 0)
+            staker_map::set(world,
+                staker,
+                0,
+                0,
+                0,
+                vector::empty(),
+                vector::empty(),
+            );
         };
 
         let prop_count = if (in) {
@@ -320,31 +327,25 @@ module apocalypse::pool_system {
         };
         staker_map::set_size(world, staker, prop_count);
 
-        if (type == SCISSORS) {
-            let scissors_count = if (in) {
-                staker_map::get_scissors_count(world, staker) + count
-            } else {
-                staker_map::get_scissors_count(world, staker) - count
-            };
-            staker_map::set_scissors_count(world, staker, scissors_count);
-        };
+        let prop_types = staker_map::get_prop_types(world, staker);
+        let prop_ids = staker_map::get_prop_ids(world, staker);
 
-        if (type == ROCK ) {
-            let rock_count = if (in) {
-                staker_map::get_rock_count(world, staker) + count
-            } else {
-                staker_map::get_rock_count(world, staker) - count
-            };
-            staker_map::set_rock_count(world, staker, rock_count);
-        };
+        if (in) {
+            vector::push_back(&mut prop_types, type);
+            staker_map::set_prop_types(world, staker, prop_types);
 
-        if (type == PAPER) {
-            let paper_count = if (in) {
-                staker_map::get_paper_count(world, staker) + count
-            } else {
-                staker_map::get_paper_count(world, staker) - count
+            vector::push_back(&mut prop_ids, prop_address);
+            staker_map::set_prop_ids(world, staker, prop_ids);
+        } else {
+            let (in, prop_index) = vector::index_of(&prop_ids, &prop_address);
+
+            if (in) {
+                vector::remove(&mut prop_types, prop_index);
+                vector::remove(&mut prop_ids, prop_index);
+
+                staker_map::set_prop_types(world, staker, prop_types);
+                staker_map::set_prop_ids(world, staker, prop_ids);
             };
-            staker_map::set_paper_count(world, staker, paper_count);
         };
     }
 

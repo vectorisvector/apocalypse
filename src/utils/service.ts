@@ -11,8 +11,8 @@ import {
 } from "@/types/type";
 import { useWallet } from "@suiet/wallet-kit";
 import { TransactionBlock } from "@mysten/sui.js/transactions";
-import { u64ToString } from "./helper";
 import { MIST_PER_SUI } from "@mysten/sui.js/utils";
+import { bcs } from "@mysten/sui.js/bcs";
 
 export const useBalance = (address?: string) => {
   const { data } = useSWR(
@@ -113,14 +113,11 @@ export const useStakingProps = (address?: string) => {
     address + "/stakingProps",
     async () => {
       if (!address || !wallet.address) return;
-
       const txb = new TransactionBlock();
-
       txb.moveCall({
         target: `${packageId}::staker_map_schema::get`,
         arguments: [txb.pure(world), txb.object(address)],
       });
-
       return suiClient
         .devInspectTransactionBlock({
           transactionBlock: txb,
@@ -131,17 +128,38 @@ export const useStakingProps = (address?: string) => {
     { refreshInterval: 10_000 },
   );
 
+  if (data?.error) {
+    return {
+      fees: "0",
+      size: "0",
+      last_staker_balance_plus: "0",
+      props: [],
+    };
+  }
+
   const values = data?.results?.[0].returnValues?.map((v) => {
-    return u64ToString(v[0]);
-  }) ?? [0, 0, 0, 0, 0, 0];
+    const res = bcs.de(v[1], Uint8Array.from(v[0]));
+    if (v[1] === "vector<vector<u8>>") {
+      return (res as number[][]).map((r) => {
+        return r.map((num) => String.fromCharCode(num)).join("");
+      });
+    }
+    if (v[1] === "vector<address>") {
+      return (res as string[]).map((r) => "0x" + r);
+    }
+    return res;
+  }) ?? ["0", "0", "0", [], []];
 
   return {
-    fees: values[0],
-    size: values[1],
-    scissors_count: values[2],
-    rock_count: values[3],
-    paper_count: values[4],
-    last_staker_balance_plus: values[5],
+    fees: values[0] as string,
+    size: values[1] as string,
+    last_staker_balance_plus: values[2] as string,
+    props: values[3].map((propId: string, i: number) => {
+      return {
+        id: propId,
+        type: values[4][i],
+      };
+    }) as { id: string; type: PropType }[],
   };
 };
 
@@ -264,5 +282,44 @@ export const useStake = () => {
 
   return {
     stake: trigger,
+  };
+};
+
+export const useUnstake = () => {
+  const wallet = useWallet();
+
+  const { trigger } = useSWRMutation(
+    "unstake",
+    (
+      _,
+      {
+        arg: { propIds },
+      }: {
+        arg: {
+          propIds: string[];
+        };
+      },
+    ) => {
+      if (!wallet.address) return;
+
+      const txb = new TransactionBlock();
+
+      txb.moveCall({
+        target: `${packageId}::pool_system::unstake`,
+        arguments: [
+          txb.pure(propIds, "vector<address>"),
+          txb.object(pool),
+          txb.object(world),
+        ],
+      });
+
+      wallet.signAndExecuteTransactionBlock({
+        transactionBlock: txb,
+      });
+    },
+  );
+
+  return {
+    unstake: trigger,
   };
 };

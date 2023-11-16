@@ -15,10 +15,9 @@ export const obeliskConfig: ObeliskConfig = {
       valueType: {
         fees: "u64",
         size: "u64",
-        scissors_count: "u64",
-        rock_count: "u64",
-        paper_count: "u64",
         last_staker_balance_plus: "u64",
+        prop_ids: "vector<address>",
+        prop_types: "vector<vector<u8>>",
       },
     }, // staker => { fees: 0, size: 0, last_staker_balance_plus: 0 }
     game_map: {
