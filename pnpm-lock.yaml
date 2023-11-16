@@ -5,15 +5,15 @@ settings:
   excludeLinksFromLockfile: false
 
 dependencies:
-  '@0xobelisk/cli':
-    specifier: ^0.4.8
-    version: 0.4.8
-  '@0xobelisk/client':
-    specifier: ^0.4.8
-    version: 0.4.8(@mysten/sui.js@0.45.1)
-  '@0xobelisk/common':
-    specifier: ^0.4.8
-    version: 0.4.8
+  '@0xobelisk/sui-cli':
+    specifier: ^0.5.0
+    version: 0.5.0
+  '@0xobelisk/sui-client':
+    specifier: ^0.5.3
+    version: 0.5.3(@mysten/sui.js@0.41.2)
+  '@0xobelisk/sui-common':
+    specifier: ^0.5.0
+    version: 0.5.0
   '@headlessui/react':
     specifier: ^1.7.17
     version: 1.7.17(react-dom@18.2.0)(react@18.2.0)
@@ -21,8 +21,8 @@ dependencies:
     specifier: ^0.7.0
     version: 0.7.0(@tanstack/react-query@5.8.1)(@types/react-dom@18.2.15)(@types/react@18.2.37)(react-dom@18.2.0)(react@18.2.0)
   '@mysten/sui.js':
-    specifier: ^0.45.1
-    version: 0.45.1
+    specifier: ^0.41.0
+    version: 0.41.2
   '@noble/hashes':
     specifier: ^1.3.2
     version: 1.3.2
@@ -88,12 +88,12 @@ devDependencies:
 
 packages:
 
-  /@0xobelisk/cli@0.4.8:
-    resolution: {integrity: sha512-yz2VvOopiCl22JOMBxVvrN2d5386hFRnHlbIk2Maphua0Tgen9KhI3+KAegrWBilJxvEvGyF4N/f+j8Ce85MOA==}
+  /@0xobelisk/sui-cli@0.5.0:
+    resolution: {integrity: sha512-0hF7YOXyGL69KHOq0D4gxlcwC0REUBRE6eXjAEXcgpX9uthD6awHyBhsoq4ER5uIIWFEty6FuZ/D3Ai2NRFEGg==}
     engines: {node: '>=18'}
     hasBin: true
     dependencies:
-      '@0xobelisk/common': 0.4.8
+      '@0xobelisk/sui-common': 0.5.0
       '@mysten/sui.js': 0.41.2
       chalk: 5.3.0
       child_process: 1.0.2
@@ -114,14 +114,14 @@ packages:
       - utf-8-validate
     dev: false
 
-  /@0xobelisk/client@0.4.8(@mysten/sui.js@0.45.1):
-    resolution: {integrity: sha512-fZNEBlgz0eK52v3WHtL22UfLK+hA/2lYDz+EzdYSeN1dyAzSLDtkmU2LRIFWSW1Ez/X6AlZALaURcnRgPEAo7g==}
+  /@0xobelisk/sui-client@0.5.3(@mysten/sui.js@0.41.2):
+    resolution: {integrity: sha512-u8W12imwEI+3y6U8pVEYXqsUMzueG6TTnftl7JpaRUpMcDMfPDDIGAF3YeB/Gs61ciCbmBYaYJxK3kytEyLP2g==}
     engines: {node: '>=18'}
     peerDependencies:
       '@mysten/sui.js': ^0.41.0
     dependencies:
       '@mysten/bcs': 0.7.4
-      '@mysten/sui.js': 0.45.1
+      '@mysten/sui.js': 0.41.2
       '@scure/bip39': 1.2.1
       assert: 2.1.0
       colorts: 0.1.63
@@ -133,8 +133,8 @@ packages:
       ts-retry-promise: 0.7.1
     dev: false
 
-  /@0xobelisk/common@0.4.8:
-    resolution: {integrity: sha512-nWjkHuoPZlE1qM43cDeXoLrQ8Nlsf8BkU8nVf2XlDT/wSNd6iDconjirp2qF7Rgihw3cvrIaq3W8FkSlHlSoEA==}
+  /@0xobelisk/sui-common@0.5.0:
+    resolution: {integrity: sha512-KHy24g0l6EaU4BYCpbZtbvq555nt/xN9ZQ/imcCukoZ0O11LosEus4pqVQoB/zK93EUoPmfZuVSGgHdvL1SV8g==}
     engines: {node: '>=18'}
     dependencies:
       '@mysten/sui.js': 0.41.2

@@ -4,7 +4,7 @@ import {
   useSignAndExecuteTransactionBlock,
 } from "@mysten/dapp-kit";
 import { SuiClient, getFullnodeUrl } from "@mysten/sui.js/client";
-import { TransactionBlock } from "@mysten/sui.js/transactions";
+import { TransactionBlock } from "@mysten/sui.js";
 import { bcs } from "@mysten/sui.js/bcs";
 
 import objectData from "@/utils/config";
@@ -47,25 +47,24 @@ export default function Test() {
     );
 
     const txb = new TransactionBlock();
-    const [coin] = txb.splitCoins(txb.gas, [100]);
+    const [coin] = txb.splitCoins(txb.gas, [txb.pure(100)]);
     const [prop, coin_] = txb.moveCall({
       target: `${objectData.packageId}::pool_system::mint`,
       arguments: [
         // txb.pure.u8('scissors'),
         txb.pure(
-          bcs
-            .vector(bcs.u8())
-            .serialize(
-              Uint8Array.from(
-                Array.from("scissors").map((letter) => letter.charCodeAt(0)),
-              ),
+          bcs.ser(
+            "vector<u8>",
+            Uint8Array.from(
+              Array.from("scissors").map((letter) => letter.charCodeAt(0)),
             ),
+          ),
         ),
         coin,
         txb.object(objectData.world),
       ],
     });
-    txb.transferObjects([prop, coin_], account.address);
+    txb.transferObjects([prop, coin_], txb.pure(account.address));
 
     signAndExecuteTransactionBlock(
       {
