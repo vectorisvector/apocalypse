@@ -41,7 +41,7 @@ export {
 }
 `;
   const path = process.cwd();
-  writeOutput(code, `${path}/chain/${network}/config.ts`, "storeConfig");
+  writeOutput(code, `${path}/src/chain/config.ts`, "storeConfig");
 }
 
 async function writeOutput(
@@ -62,8 +62,7 @@ async function main() {
   const network = process.argv[2];
   const contractPath = `${path}/contracts/${obeliskConfig.name}`;
   const deployment = await getDeploymentJson(contractPath, network);
-  deployment &&
-    storeConfig(deployment.network, deployment.packageId, deployment.worldId);
+  storeConfig(deployment!.network, deployment!.packageId, deployment!.worldId);
 }
 
 main();

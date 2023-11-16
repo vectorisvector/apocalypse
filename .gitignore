@@ -39,3 +39,4 @@ next-env.d.ts
 # contract
 /contracts/*/build
 localnode*
+.env

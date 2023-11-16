@@ -1,6 +1,5 @@
-import { Ed25519Keypair } from "@mysten/sui.js/keypairs/ed25519";
-import { fromB64 } from "@mysten/sui.js/utils";
-import fs from "fs";
+import { Ed25519Keypair, fromB64 } from "@0xobelisk/sui-client";
+import * as fs from "fs";
 
 function generateAccount() {
   const keypair = new Ed25519Keypair();

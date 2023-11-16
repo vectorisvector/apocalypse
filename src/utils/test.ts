@@ -1,18 +1,36 @@
-import { SuiClient, getFullnodeUrl } from "@mysten/sui.js/client";
-import { TransactionBlock } from "@mysten/sui.js/transactions";
-import { Ed25519Keypair } from "@mysten/sui.js/keypairs/ed25519";
-import { MIST_PER_SUI } from "@mysten/sui.js/utils";
+import {
+  TransactionBlock,
+  Ed25519Keypair,
+  MIST_PER_SUI,
+  Obelisk,
+  NetworkType,
+  loadMetadata,
+  fromB64,
+  TransactionResult,
+} from "@0xobelisk/sui-client";
+
 import { hexToBytes } from "@noble/hashes/utils";
 import "dotenv/config";
 
 import objectData from "./config";
 
-const rpcUrl = getFullnodeUrl("devnet");
-const client = new SuiClient({ url: rpcUrl });
+const network = "devnet" as NetworkType;
 
 const privateKey = hexToBytes(process.env.PRIVATE_KEY as string);
 const keypair = Ed25519Keypair.fromSecretKey(privateKey);
+
+const privateKeyU8 = fromB64(keypair.export().privateKey);
+const privateKeyHex = Buffer.from(privateKeyU8).toString("hex");
+
 const address = keypair.toSuiAddress();
+
+const metadata = await loadMetadata(network, objectData.packageId);
+const obelisk = new Obelisk({
+  networkType: network,
+  packageId: objectData.packageId,
+  metadata: metadata,
+  secretKey: privateKeyHex,
+});
 
 console.log(`Address: ${address}`);
 
@@ -20,36 +38,52 @@ const SCISSORS = new TextEncoder().encode("scissors"); // ASCII values for "scis
 const ROCK = new TextEncoder().encode("rock"); // ASCII values for "rock"
 const PAPER = new TextEncoder().encode("paper"); // ASCII values for "paper"
 
-function mint(param: { scissors: number; rock: number; paper: number }) {
+async function mint(param: { scissors: number; rock: number; paper: number }) {
   const list = Object.entries(param);
   const txb = new TransactionBlock();
-  list.forEach(([key, value]) => {
+  list.forEach(async ([key, value]) => {
     for (let i = 0; i < value; i++) {
-      const [coin] = txb.splitCoins(txb.gas, [2n * MIST_PER_SUI]);
-      const [prop, coin_] = txb.moveCall({
-        target: `${objectData.packageId}::pool_system::mint`,
-        arguments: [txb.pure.string(key), coin, txb.object(objectData.world)],
-      });
-      txb.transferObjects([prop, coin_], address);
+      const [coin] = txb.splitCoins(txb.gas, [txb.pure(2n * MIST_PER_SUI)]);
+      // const [prop, coin_] = txb.moveCall({
+      //   target: `${objectData.packageId}::pool_system::mint`,
+      //   arguments: [txb.pure(key), coin, txb.object(objectData.world)],
+      // });
+      const params = [txb.pure(key), coin, txb.object(objectData.world)];
+      const [prop, coin_] = (await obelisk.tx.pool_system.mint(
+        txb,
+        params,
+        undefined,
+        true,
+      )) as TransactionResult;
+      txb.transferObjects([prop, coin_], txb.pure(address));
     }
   });
 
   return txb;
 }
 
-function burn() {
+async function burn() {
   const txb = new TransactionBlock();
-  const coin = txb.moveCall({
-    target: `${objectData.packageId}::pool_system::burn`,
-    arguments: [
-      txb.object(
-        "0x0d892ba7878c3b1efeb6a098cf16d1720b16f716d8b6b23ec7c14728a9e156b5",
-      ),
-      txb.object(objectData.pool),
-      txb.object(objectData.world),
-    ],
-  });
-  txb.transferObjects([coin], address);
+  const params = [
+    txb.object(
+      "0x0d892ba7878c3b1efeb6a098cf16d1720b16f716d8b6b23ec7c14728a9e156b5",
+    ),
+    txb.object(objectData.pool),
+    txb.object(objectData.world),
+  ];
+
+  const coin = (await obelisk.tx.pool_system.burn(
+    txb,
+    params,
+    undefined,
+    true,
+  )) as TransactionResult;
+
+  // const coin = txb.moveCall({
+  //   target: `${objectData.packageId}::pool_system::burn`,
+  //   arguments:
+  // });
+  txb.transferObjects([coin], txb.pure(address));
   return txb;
 }
 
@@ -68,41 +102,61 @@ function stake() {
       ),
     ],
   });
-  txb.moveCall({
-    target: `${objectData.packageId}::pool_system::stake`,
-    arguments: [
-      props,
-      txb.pure(address),
-      txb.object(objectData.pool),
-      txb.object(objectData.world),
-    ],
-  });
+  // txb.moveCall({
+  //   target: `${objectData.packageId}::pool_system::stake`,
+  //   arguments: [
+  //     props,
+  //     txb.pure(address),
+  //     txb.object(objectData.pool),
+  //     txb.object(objectData.world),
+  //   ],
+  // });
+
+  const params = [
+    props,
+    txb.pure(address),
+    txb.object(objectData.pool),
+    txb.object(objectData.world),
+  ];
+  obelisk.tx.pool_system.stake(txb, params, undefined, true);
+
   return txb;
 }
 
 function unstake() {
   const txb = new TransactionBlock();
-  txb.moveCall({
-    target: `${objectData.packageId}::pool_system::unstake`,
-    arguments: [
-      txb.pure([
-        "0x0d892ba7878c3b1efeb6a098cf16d1720b16f716d8b6b23ec7c14728a9e156b5",
-      ]),
-      txb.object(objectData.pool),
-      txb.object(objectData.world),
-    ],
-  });
+  // txb.moveCall({
+  //   target: `${objectData.packageId}::pool_system::unstake`,
+  //   arguments: [
+  //     txb.pure([
+  //       "0x0d892ba7878c3b1efeb6a098cf16d1720b16f716d8b6b23ec7c14728a9e156b5",
+  //     ]),
+  //     txb.object(objectData.pool),
+  //     txb.object(objectData.world),
+  //   ],
+  // });
+
+  const params = [
+    txb.pure([
+      "0x0d892ba7878c3b1efeb6a098cf16d1720b16f716d8b6b23ec7c14728a9e156b5",
+    ]),
+    txb.object(objectData.pool),
+    txb.object(objectData.world),
+  ];
+
+  obelisk.tx.pool_system.unstake(txb, params, undefined, true);
+
   return txb;
 }
 
 async function main() {
-  const txb = mint({
+  const mint_txb = await mint({
     scissors: 1,
     rock: 1,
     paper: 1,
   });
 
-  // const txb = burn();
+  const burn_txb = await burn();
 
   // const txb = stake();
 
@@ -113,10 +167,7 @@ async function main() {
   //   sender: address,
   // });
 
-  const res = await client.signAndExecuteTransactionBlock({
-    transactionBlock: txb,
-    signer: keypair,
-  });
+  const res = await obelisk.signAndSendTxn(mint_txb);
 
   console.log(res);
 }
