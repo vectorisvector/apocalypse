@@ -1,24 +1,9 @@
 "use client";
 
-import Header from "@/components/Header";
-import {
-  createNetworkConfig,
-  SuiClientProvider,
-  WalletProvider,
-} from "@mysten/dapp-kit";
-import { getFullnodeUrl } from "@mysten/sui.js/client";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
-
-import Test from "./test";
-
-const { networkConfig } = createNetworkConfig({
-  localnet: { url: getFullnodeUrl("localnet") },
-  devnet: { url: getFullnodeUrl("devnet") },
-  testnet: { url: getFullnodeUrl("testnet") },
-  mainnet: { url: getFullnodeUrl("mainnet") },
-});
-const queryClient = new QueryClient();
+import { WalletProvider } from "@suiet/wallet-kit";
+import Header from "@/components/Header";
+import Content from "../components/Content";
 
 export default function Home() {
   let [isClient, setIsClient] = useState(false);
@@ -29,24 +14,15 @@ export default function Home() {
     }
   }, []);
 
-  return (
-    isClient && (
-      <QueryClientProvider client={queryClient}>
-        <SuiClientProvider
-          networks={networkConfig}
-          defaultNetwork="devnet"
-        >
-          <WalletProvider autoConnect>
-            <Header />
+  return isClient ? (
+    <WalletProvider autoConnect>
+      <Header />
 
-            <main>
-              <div className=" mx-auto flex max-w-7xl flex-col py-10">
-                <Test />
-              </div>
-            </main>
-          </WalletProvider>
-        </SuiClientProvider>
-      </QueryClientProvider>
-    )
+      <main className=" mx-auto flex max-w-7xl flex-col py-10">
+        <Content />
+      </main>
+    </WalletProvider>
+  ) : (
+    <></>
   );
 }

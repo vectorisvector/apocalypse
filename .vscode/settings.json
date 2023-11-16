@@ -3,6 +3,7 @@
   "css.lint.unknownAtRules": "ignore",
   "cSpell.words": [
     "0xobelisk",
+    "bignumber",
     "daisyui",
     "devnet",
     "Fullnode",

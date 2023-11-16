@@ -104,8 +104,6 @@ module apocalypse::game_system {
     // ----------Helpers----------
     fun handle_game_fee(prop_balance: &mut Balance<SUI>, pool_balance: &mut Balance<SUI>, world: &mut World) {
         let game_fee_amount = p::game_fee_amount(world); // 0.1 sui
-        let total_balance = pool_schema::get_balance(world);
-        pool_schema::set_balance(world, total_balance + game_fee_amount);
 
         let to_staker_fee = (pool_schema::get_to_staker_fee(world) as u64); // 50%
         let staker_fee = game_fee_amount * to_staker_fee / 10_000;
@@ -125,6 +123,8 @@ module apocalypse::game_system {
         pool_schema::set_founder_balance(world, founder_balance + game_fee_amount - staker_fee - player_fee);
 
         balance::join(pool_balance, balance::split(prop_balance, game_fee_amount));
+
+        pool_schema::set_balance(world, balance::value(pool_balance));
     }
 
     fun random(upper_bound: u64, world: &mut World): u64 {

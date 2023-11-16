@@ -150,13 +150,13 @@ function unstake() {
 }
 
 async function main() {
-  // const txb = mint({
-  //   scissors: 1,
-  //   rock: 1,
-  //   paper: 1,
-  // });
+  const mint_txb = await mint({
+    scissors: 1,
+    rock: 1,
+    paper: 1,
+  });
 
-  const txb = await burn();
+  const burn_txb = await burn();
 
   // const txb = stake();
 
@@ -167,7 +167,7 @@ async function main() {
   //   sender: address,
   // });
 
-  const res = await obelisk.signAndSendTxn(txb);
+  const res = await obelisk.signAndSendTxn(mint_txb);
 
   console.log(res);
 }

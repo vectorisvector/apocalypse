@@ -1,3 +1,5 @@
+"use client";
+
 import Connect from "./Connect";
 
 export default function Header() {

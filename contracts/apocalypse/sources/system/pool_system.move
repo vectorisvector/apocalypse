@@ -139,6 +139,8 @@ module apocalypse::pool_system {
         let fee_coin = coin::split(&mut prop_coin, fee, ctx);
 
         balance::join(&mut pool.balance, coin::into_balance(fee_coin));
+        pool_schema::set_balance(world, balance::value(&pool.balance));
+
         prop_coin
     }
 
@@ -157,6 +159,7 @@ module apocalypse::pool_system {
 
         let staker_balance = pool_schema::get_staker_balance(world);
         pool_schema::set_staker_balance(world, staker_balance - fees_amount);
+
         pool_schema::set_balance(world, balance::value(&pool.balance));
         
         coin
@@ -170,6 +173,7 @@ module apocalypse::pool_system {
 
         c::update_fees(fees_amount, false, card);
         pool_schema::set_player_balance(world, player_balance - fees_amount);
+
         pool_schema::set_balance(world, balance::value(&pool.balance));
 
         coin
