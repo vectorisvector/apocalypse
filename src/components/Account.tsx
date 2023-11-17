@@ -11,6 +11,7 @@ import {
 } from "@/utils/service";
 import { useWallet } from "@suiet/wallet-kit";
 import { useCallback, useMemo, useState } from "react";
+import Play from "./Play";
 
 type actionType = "mint" | "burn" | "stake" | "unstake";
 
@@ -101,7 +102,7 @@ export default function Account() {
       />
 
       {wallet.address && (
-        <div className=" flex flex-col items-center gap-4">
+        <div className=" flex flex-col gap-4">
           <h2 className=" text-3xl font-bold">
             Account {truncateAddress(wallet.address)}
           </h2>
@@ -167,6 +168,11 @@ export default function Account() {
                   </div>
                 </div>
               </div>
+
+              <Play
+                type="rock"
+                props={props.rock}
+              />
             </div>
 
             <div className="stat relative">
@@ -234,6 +240,11 @@ export default function Account() {
                   </div>
                 </div>
               </div>
+
+              <Play
+                type="scissors"
+                props={props.scissors}
+              />
             </div>
 
             <div className="stat relative">
@@ -297,6 +308,11 @@ export default function Account() {
                   </div>
                 </div>
               </div>
+
+              <Play
+                type="paper"
+                props={props.paper}
+              />
             </div>
           </div>
         </div>

@@ -76,7 +76,9 @@ export default function InputModal({
                       isError ? " input-error" : "",
                     )}
                     onChange={(e) => setCount(Number(e.target.value))}
-                    onKeyDown={(e) => e.key === "Enter" && confirm()}
+                    onKeyDown={(e) =>
+                      !(isError || count <= 0) && e.key === "Enter" && confirm()
+                    }
                   />
 
                   <button

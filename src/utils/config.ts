@@ -1,41 +1,41 @@
 export const publisher =
-  "0xd0e070bbaab58b729b88ca75722f25900628a5bd8f606ef5738dff438e142f08";
+  "0xce559ae2ba76956eb2a54306b86eace18bfde03b858b8d2b5e0146919380ccbf";
 
 export const upgradeCap =
-  "0xfbb6d26edb665d9bdc20ff1f6d40dc5c6d9afeaeee3c5207e30edf993ea80063";
+  "0x04ca2ecbab0767edc9fd669c3fa944f69db711c9661ad3c0c7497f1c0149c357";
 
 export const adminCap =
-  "0x1d05cb273fc538a085cc519839a3fabbc66c56a1c2f87e2507cab41733864bf1";
+  "0x74119be4ae8af9bad3a5008d8f2190e5d397adbdcb1e32954f959bfc60e95ec8";
 
 export const randomness_schema =
-  "0x7d73617736799862b4cceacd2fd2e3891ce48a131c2ff76dff8eec3fcfd82882";
+  "0xdd76e3d139fbdab07b8424a7fc73e0e76722ace9427be8ba51f5b5f6b5200718";
 
 export const staker_map_schema =
-  "0x24be03971d225c9d061108eeb416ed3698f9e0edccc5b8cadf459c14de1f33bb";
+  "0xed1d70f12ad0ddab9117b3b9156992bd4ab890ee68389b3cc06598c9333b9e30";
 
 export const game_map_schema =
-  "0xa1e1cecf9e29fffec2fee78f60f82888462466eef24b14a04d0f55e7c8d1d29d";
+  "0xa5bc4d775b0225bf6f6a7be9dbea82255e70c8d0eabecf58e1a660caec296de2";
 
 export const card_map_schema =
-  "0x9966e89a4457ef346ee2b3eedb46374f17190955413d45da37b7853214514fa2";
+  "0x59f3bdb0ae0a3f54622bc3a6ad8332c6c00ebb3ee30fb82ff0757408740ac43a";
 
 export const pool_map_schema =
-  "0x56c01bda97ad2565bde2d8252537e58b2c1e70427e4b510df8b196c80723c51c";
+  "0x5208ec6fe4c41ae1aa9be758547ad956437bdf3d5ef9dcdef56feb11e52a4883";
 
 export const pool_schema =
-  "0x2d8ad5bd8243980976de62093afa46b22c62ae87ff39952deb2902b4721f98d3";
+  "0xcaafeb9590f1078c60e4d7d33a3bb01256a2a1a52fc5f33c9c348d213e6f420a";
 
 export const global_schema =
-  "0x8c9a9afdd5f4c56d7a6999bdbd9be613b9b3752d78bffb28aedec8c4e3cbe7eb";
+  "0x33312d57ea1a9385e602df7c4f861a814639dfdec6cba50183df2dddf0686527";
 
 export const pool =
-  "0xa0d274f720f7c4f36395ec7bb457a2c659f29930ba8f335776d5174b62188442";
+  "0x574e0799e45639fafc829f28911a0da5448d25e28333657c3a9b0bcbf52c491a";
 
 export const world =
-  "0x36f35b7c9630d288866da3daaa679ee39eb91b9335bc355d0c2374db620478e9";
+  "0x5671034370dd3e1a079cc0ad1ec8b195945acddbb40e1c36e0d96008f9d1b242";
 
 export const packageId =
-  "0xfe5f306653599373b6ff6eeed4ec14fdf8c761a0df8dd6b12378538ed1d56313";
+  "0x455f24ba015603eb7b23767c1e64adf1429e6458a6cc972832e433e037b386c7";
 
 const objectData = {
   pool_schema,

@@ -53,3 +53,12 @@ export interface Props {
   rock: string[];
   paper: string[];
 }
+
+export interface Card {
+  id: {
+    id: string;
+  };
+  size: string;
+  fees: string;
+  last_player_balance_plus: string;
+}

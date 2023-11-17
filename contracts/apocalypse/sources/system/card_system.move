@@ -63,6 +63,8 @@ module apocalypse::card_system {
         let player_balance_plus = pool::get_player_balance_plus(world);
         let last_player_balance_plus = card.last_player_balance_plus;
         let prop_count = pool::get_prop_count(world);
+        prop_count = if (prop_count == 0) { 1 } else { prop_count };
+
         let size = card.size;
         let fees_plus = (player_balance_plus - last_player_balance_plus) * size / prop_count;
         fees_plus

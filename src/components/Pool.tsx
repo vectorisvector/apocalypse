@@ -5,7 +5,7 @@ export default function Pool() {
   const global = useGlobal();
 
   return (
-    <div className=" flex flex-col items-center gap-4">
+    <div className=" flex flex-col gap-4">
       <h2 className=" text-3xl font-bold">Pool</h2>
       <div className=" stats flex w-full shadow">
         <div className="stat">

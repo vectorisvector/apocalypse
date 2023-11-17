@@ -299,6 +299,7 @@ module apocalypse::pool_system {
         // pool balance plus
         let staker_balance_plus = pool_schema::get_staker_balance_plus(world);
         let prop_count = pool_schema::get_prop_count(world);
+        prop_count = if (prop_count == 0) { 1 } else { prop_count };
 
         // last staker balance plus
         let last_staker_balance_plus = staker_map::get_last_staker_balance_plus(world, staker);

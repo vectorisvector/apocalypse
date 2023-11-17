@@ -17,6 +17,7 @@
     "dev-faucet": "obelisk faucet --network devnet",
     "test-faucet": "obelisk faucet --network testnet",
     "main-faucet": "obelisk faucet --network mainnet",
+    "dev-upgrade": "obelisk upgrade --network devnet && ts-node scripts/storeConfig.ts devnet",
     "generateAccount": "ts-node scripts/generateAccount.ts",
     "test": "ts-node src/utils/test.ts"
   },
@@ -31,6 +32,7 @@
     "bignumber.js": "^9.1.2",
     "classnames": "^2.3.2",
     "dotenv": "^16.3.1",
+    "drand-client": "^1.2.1",
     "next": "14.0.2",
     "react": "^18",
     "react-dom": "^18",

@@ -35,6 +35,9 @@ dependencies:
   dotenv:
     specifier: ^16.3.1
     version: 16.3.1
+  drand-client:
+    specifier: ^1.2.1
+    version: 1.2.1
   next:
     specifier: 14.0.2
     version: 14.0.2(@babel/core@7.23.3)(react-dom@18.2.0)(react@18.2.0)
@@ -3317,6 +3320,14 @@ packages:
   /dotenv@16.3.1:
     resolution: {integrity: sha512-IPzF4w4/Rd94bA9imS68tZBaYyBWSCE47V1RGuMrB94iyTOIEwRmVL2x/4An+6mETpLrKJ5hQkB8W4kFAadeIQ==}
     engines: {node: '>=12'}
+    dev: false
+
+  /drand-client@1.2.1:
+    resolution: {integrity: sha512-ht7ku30RfqJDFVv1jVE6EaHTfu8w6DQ4BZbviLRqn3ZCp+8kI38XFwr61Y3GFEFBM0cAwfnTtgjJ9f541XIBqQ==}
+    engines: {node: '>= 10.4.0'}
+    dependencies:
+      '@noble/curves': 1.2.0
+      buffer: 6.0.3
     dev: false
 
   /ejs@3.1.9:

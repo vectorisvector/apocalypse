@@ -3,6 +3,7 @@ import useSWRMutation from "swr/mutation";
 import { suiClient } from "./sui";
 import { global_schema, packageId, pool, pool_schema, world } from "./config";
 import {
+  Card,
   GlobalWrapper,
   PoolWrapper,
   Prop,
@@ -11,8 +12,10 @@ import {
 } from "@/types/type";
 import { useWallet } from "@suiet/wallet-kit";
 import { TransactionBlock } from "@mysten/sui.js/transactions";
-import { MIST_PER_SUI } from "@mysten/sui.js/utils";
+import { MIST_PER_SUI, SUI_CLOCK_OBJECT_ID } from "@mysten/sui.js/utils";
 import { bcs } from "@mysten/sui.js/bcs";
+import { useBeacon } from "./drand";
+import { checkRoundExpired } from "./helper";
 
 export const useBalance = (address?: string) => {
   const { data } = useSWR(
@@ -161,6 +164,71 @@ export const useStakingProps = (address?: string) => {
       };
     }) as { id: string; type: PropType }[],
   };
+};
+
+export const useAccountCards = (address?: string) => {
+  const { data } = useSWR(
+    address + "/accountCards",
+    () => {
+      if (!address) return;
+      return suiClient
+        .getOwnedObjects({
+          owner: address,
+          filter: {
+            StructType: `${packageId}::card_system::Card`,
+          },
+          options: {
+            showContent: true,
+          },
+        })
+        .then((res) => res.data);
+    },
+    { refreshInterval: 10_000 },
+  );
+
+  const cards = (data
+    ?.map(({ data }) => {
+      if (data?.content?.dataType === "moveObject") {
+        const card = data.content.fields as unknown as Card;
+        return card;
+      }
+    })
+    .filter((card) => card) ?? []) as Card[];
+  return cards;
+};
+
+export const useOldRound = () => {
+  const wallet = useWallet();
+
+  const { data } = useSWR(
+    "/oldRound",
+    async () => {
+      if (!wallet.address) return;
+      const txb = new TransactionBlock();
+      txb.moveCall({
+        target: `${packageId}::randomness_schema::get_round`,
+        arguments: [txb.pure(world)],
+      });
+      return suiClient
+        .devInspectTransactionBlock({
+          transactionBlock: txb,
+          sender: wallet.address,
+        })
+        .then((res) => res);
+    },
+    { refreshInterval: 10_000 },
+  );
+
+  if (data?.error) {
+    return "0";
+  }
+
+  const values = data?.results?.[0].returnValues?.map((v) => {
+    const res = bcs.de(v[1], Uint8Array.from(v[0]));
+    return res;
+  }) ?? ["0"];
+
+  return values[0] as string;
 };
 
 export const useMint = () => {
@@ -321,5 +389,123 @@ export const useUnstake = () => {
 
   return {
     unstake: trigger,
+  };
+};
+
+export const useStartGame = (oldRound: number) => {
+  const wallet = useWallet();
+  const beacon = useBeacon();
+
+  const { trigger } = useSWRMutation(
+    "startGame",
+    async (
+      _,
+      {
+        arg: { propIds, card },
+      }: {
+        arg: {
+          propIds: string[];
+          card?: string;
+        };
+      },
+    ) => {
+      if (!wallet.address || !beacon || oldRound === 0) return;
+
+      const txb = new TransactionBlock();
+
+      if (checkRoundExpired(oldRound)) {
+        console.log("round expired");
+        txb.moveCall({
+          target: `${packageId}::game_system::end_game`,
+          arguments: [
+            txb.pure(
+              Array.from(new Uint8Array(Buffer.from(beacon.signature, "hex"))),
+            ),
+            txb.pure(
+              Array.from(
+                new Uint8Array(Buffer.from(beacon.previous_signature, "hex")),
+              ),
+            ),
+            txb.pure(beacon.round),
+            txb.object(SUI_CLOCK_OBJECT_ID),
+            txb.object(pool),
+            txb.object(world),
+          ],
+        });
+      }
+
+      const props = txb.makeMoveVec({
+        objects: propIds.map((propId) => txb.object(propId)),
+      });
+
+      txb.moveCall(
+        card
+          ? {
+              target: `${packageId}::game_system::start_game`,
+              arguments: [
+                props,
+                txb.object(card),
+                txb.object(SUI_CLOCK_OBJECT_ID),
+                txb.object(pool),
+                txb.object(world),
+              ],
+            }
+          : {
+              target: `${packageId}::game_system::start_game_new_card`,
+              arguments: [
+                props,
+                txb.object(SUI_CLOCK_OBJECT_ID),
+                txb.object(pool),
+                txb.object(world),
+              ],
+            },
+      );
+
+      wallet.signAndExecuteTransactionBlock({
+        transactionBlock: txb,
+      });
+
+      const res = await suiClient.devInspectTransactionBlock({
+        transactionBlock: txb,
+        sender: wallet.address,
+      });
+      console.log(res);
+    },
+  );
+
+  return {
+    startGame: trigger,
+  };
+};
+
+export const useEndGame = () => {
+  const wallet = useWallet();
+
+  const beacon = useBeacon();
+
+  const { trigger } = useSWRMutation("endGame", async (_) => {
+    if (!wallet.address || !beacon) return;
+
+    const txb = new TransactionBlock();
+
+    txb.moveCall({
+      target: `${packageId}::game_system::end_game`,
+      arguments: [
+        txb.pure(beacon.signature),
+        txb.pure(beacon.previous_signature),
+        txb.pure(beacon.round),
+        txb.object(SUI_CLOCK_OBJECT_ID),
+        txb.object(pool),
+        txb.object(world),
+      ],
+    });
+
+    wallet.signAndExecuteTransactionBlock({
+      transactionBlock: txb,
+    });
+  });
+
+  return {
+    endGame: trigger,
   };
 };

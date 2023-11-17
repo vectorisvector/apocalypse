@@ -3,7 +3,11 @@ import { TransactionBlock } from "@mysten/sui.js/transactions";
 import { Ed25519Keypair } from "@mysten/sui.js/keypairs/ed25519";
 import { hexToBytes } from "@noble/hashes/utils";
 import "dotenv/config";
-import { packageId, world } from "./config";
+import { packageId, pool, world } from "./config";
+import { drandChain, drandClient } from "./drand";
+import { G2ChainedBeacon } from "drand-client";
+import { SUI_CLOCK_OBJECT_ID } from "@mysten/sui.js/utils";
+import { bcs } from "@mysten/sui.js/bcs";
 
 const rpcUrl = getFullnodeUrl("devnet");
 const client = new SuiClient({ url: rpcUrl });
@@ -19,29 +23,31 @@ const ROCK = new TextEncoder().encode("rock"); // ASCII values for "rock"
 const PAPER = new TextEncoder().encode("paper"); // ASCII values for "paper"
 
 async function main() {
+  const beacon = (await drandClient.latest()) as G2ChainedBeacon;
+
   const txb = new TransactionBlock();
 
   txb.moveCall({
-    target: `${packageId}::staker_map_schema::get`,
+    target: `${packageId}::game_system::end_game`,
     arguments: [
-      txb.pure(world),
-      txb.object(
-        "0x57df671d8a7f6727407ae8d37d87c43b5dbeb3167a39aa6046e56f29b2598f39",
+      txb.pure(
+        Array.from(new Uint8Array(Buffer.from(beacon.signature, "hex"))),
       ),
+      txb.pure(
+        Array.from(
+          new Uint8Array(Buffer.from(beacon.previous_signature, "hex")),
+        ),
+      ),
+      txb.pure(beacon.round),
+      txb.object(SUI_CLOCK_OBJECT_ID),
+      txb.object(pool),
+      txb.object(world),
     ],
   });
 
-  const res = await client.signAndExecuteTransactionBlock({
+  const res = await client.devInspectTransactionBlock({
     transactionBlock: txb,
-    signer: keypair,
-    options: {
-      showEffects: true,
-      showBalanceChanges: true,
-      showEvents: true,
-      showInput: true,
-      showObjectChanges: true,
-      showRawInput: true,
-    },
+    sender: address,
   });
 
   console.log(res);

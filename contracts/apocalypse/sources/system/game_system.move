@@ -21,7 +21,7 @@ module apocalypse::game_system {
 
     // ----------Errors----------
     const EGameNotEnd: u64 = 0;
-    const EGameNotExpried: u64 = 1;
+    const EGameNotExpired: u64 = 1;
 
     // ----------Consts----------
     const SCISSORS: vector<u8> = b"scissors";
@@ -32,7 +32,7 @@ module apocalypse::game_system {
     // ----------Public Functions----------
     public fun start_game(props: vector<Prop>, card: &mut Card, clock: &Clock, pool: &mut Pool, world: &mut World, ctx: &TxContext) {
         let old_round = randomness_schema::get_round(world);
-        assert!(!randomness::check_round_expried(old_round, clock), EGameNotEnd);
+        assert!(!randomness::check_round_expired(old_round, clock), EGameNotEnd);
 
         let player = tx_context::sender(ctx);
         let len = vector::length(&props);
@@ -54,21 +54,32 @@ module apocalypse::game_system {
                 c::update_size(len, true, card, world);
             };
             global::set_game_count(world, game_count + 1);
+
+            i = i + 1;
         };
         vector::destroy_empty(props);
     }
 
+    public fun start_game_new_card(props: vector<Prop>, clock: &Clock, pool: &mut Pool, world: &mut World, ctx: &mut TxContext) {
+        let card = c::new(world, ctx);
+        start_game(props, &mut card, clock, pool, world, ctx);
+        let player = tx_context::sender(ctx);
+        c::transfer(card, player, world, ctx);
+    }
+
     public fun end_game(sig: vector<u8>, prev_sig: vector<u8>, round: u64, clock: &Clock, pool: &mut Pool, world: &mut World, ctx: &TxContext) {
         let old_round = randomness_schema::get_round(world);
-        assert!(randomness::check_round_expried(old_round, clock) && !randomness::check_round_expried(round, clock) && round > old_round, EGameNotExpried);
+        assert!(randomness::check_round_expired(old_round, clock) && !randomness::check_round_expired(round, clock) && round > old_round, EGameNotExpired);
 
-        randomness::update_randomness(sig, prev_sig, round, clock, world, ctx);
-
-        // let gaming_props = pool_system::gaming_props(pool);
-        // let staking_props = pool_system::staking_props(pool);
-        // let (balance, gaming_props, staking_props) = pool_system::pool_fields(pool);
+        randomness::update_randomness(sig, prev_sig, round, world, ctx);
 
         loop {
+            let len = {
+                let gaming_props = pool_system::gaming_props(pool);
+                vector::length(gaming_props)
+            };
+            if (len == 0) break;
+
             let index = {
                 let staking_props = pool_system::staking_props_mut(pool);
                 let upper_bound = vector::length(staking_props);
@@ -89,15 +100,50 @@ module apocalypse::game_system {
                 calculate_winer(gaming_prop, staking_prop)
             };
 
-            {
-                pk(res, index, pool, world);
+            let gaming_prop_onwer = {
+                let gaming_props = pool_system::gaming_props(pool);
+                let gaming_prop = vector::borrow(gaming_props, 0);
+                let gaming_prop_address = object::id_address(gaming_prop);
+                game_map::get_player(world, gaming_prop_address)
             };
 
-            let len = {
-                let gaming_props = pool_system::gaming_props(pool);
-                vector::length(gaming_props)
+            let staking_prop_onwer = {
+                let staking_props = pool_system::staking_props(pool);
+                let staking_prop = vector::borrow(staking_props, index);
+                let staking_prop_address = object::id_address(staking_prop);
+                pool_map::get_staker(world, staking_prop_address)
             };
-            if (len == 0) break
+
+            // player lose
+            if (res == 0) {
+                let gaming_props = pool_system::gaming_props_mut(pool);
+                let gaming_prop = vector::remove(gaming_props, 0);
+                pool_system::stake(vector[gaming_prop], staking_prop_onwer, pool, world);
+            };
+
+            // player win
+            if (res == 1) {
+                let gaming_props = pool_system::gaming_props_mut(pool);
+                let gaming_prop = vector::remove(gaming_props, 0);
+
+                let staking_props = pool_system::staking_props(pool);
+                let staking_prop = vector::borrow(staking_props, index);
+                let staking_prop_address = object::id_address(staking_prop);
+
+                let unstake_props = pool_system::unstake_friend(vector[staking_prop_address], staking_prop_onwer, pool, world);
+                let staking_prop = vector::pop_back(&mut unstake_props);
+                vector::destroy_empty(unstake_props);
+
+                transfer::public_transfer(staking_prop, gaming_prop_onwer);
+                transfer::public_transfer(gaming_prop, gaming_prop_onwer);
+            };
+
+            // draw game
+            if (res == 2) {
+                let gaming_props = pool_system::gaming_props_mut(pool);
+                let gaming_prop = vector::remove(gaming_props, 0);
+                pool_system::stake(vector[gaming_prop], gaming_prop_onwer, pool, world);
+            };
         };
     }
 
@@ -160,36 +206,5 @@ module apocalypse::game_system {
                 2
             }
         }
-    }
-
-    fun pk(
-        res: u8,
-        index: u64,
-        pool: &mut Pool,
-        world: &mut World
-    ) {
-        let (_, gaming_props, staking_props) = pool_system::pool_fields(pool);
-
-        let gaming_prop = vector::remove(gaming_props, 0);
-        let gaming_prop_address = object::id_address(&gaming_prop);
-        let gaming_prop_onwer = game_map::get_player(world, gaming_prop_address);
-
-        let staking_prop = vector::borrow(staking_props, index);
-        let staking_prop_address = object::id_address(staking_prop);
-        let staking_prop_onwer = pool_map::get_staker(world, staking_prop_address);
-
-        game_map::remove(world, gaming_prop_address);
-        if (res == 0) {
-            pool_system::stake(vector[gaming_prop], staking_prop_onwer, pool, world);
-        } else if (res == 1) {
-            let unstake_props = pool_system::unstake_friend(vector[staking_prop_address], staking_prop_onwer, pool, world);
-            let staking_prop = vector::pop_back(&mut unstake_props);
-            vector::destroy_empty(unstake_props);
-
-            transfer::public_transfer(staking_prop, gaming_prop_onwer);
-            transfer::public_transfer(gaming_prop, gaming_prop_onwer);
-        } else {
-            pool_system::stake(vector[gaming_prop], gaming_prop_onwer, pool, world);
-        };
     }
 }

@@ -1,9 +1,9 @@
 {
   "projectName": "apocalypse",
   "network": "devnet",
-  "packageId": "0xfe5f306653599373b6ff6eeed4ec14fdf8c761a0df8dd6b12378538ed1d56313",
-  "worldId": "0x36f35b7c9630d288866da3daaa679ee39eb91b9335bc355d0c2374db620478e9",
-  "upgradeCap": "0xfbb6d26edb665d9bdc20ff1f6d40dc5c6d9afeaeee3c5207e30edf993ea80063",
-  "adminCap": "0x1d05cb273fc538a085cc519839a3fabbc66c56a1c2f87e2507cab41733864bf1",
+  "packageId": "0x455f24ba015603eb7b23767c1e64adf1429e6458a6cc972832e433e037b386c7",
+  "worldId": "0x5671034370dd3e1a079cc0ad1ec8b195945acddbb40e1c36e0d96008f9d1b242",
+  "upgradeCap": "0x04ca2ecbab0767edc9fd669c3fa944f69db711c9661ad3c0c7497f1c0149c357",
+  "adminCap": "0x74119be4ae8af9bad3a5008d8f2190e5d397adbdcb1e32954f959bfc60e95ec8",
   "version": 1
 }

@@ -46,3 +46,17 @@ export function u64ToString(u64: number[]): string {
 
   return u64Value.toString();
 }
+
+/**
+ * Returns the timestamp for a specified round number.
+ * @param round The round number.
+ * @returns The timestamp.
+ */
+export function roundTime(round: number): number {
+  const GENESIS = 1595431050;
+  return GENESIS + 30 * (round - 1);
+}
+
+export function checkRoundExpired(round: number): boolean {
+  return Date.now() / 1000 > roundTime(round) + 30;
+}

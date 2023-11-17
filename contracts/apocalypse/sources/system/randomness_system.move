@@ -13,16 +13,13 @@ module apocalypse::randomness_system {
 
     // ----------Errors----------
     const EInvalidProof: u64 = 0;
-    const ERoundNotOver: u64 = 1;
 
     // ----------Consts----------
     const GENESIS: u64 = 1595431050;
     const DRAND_PK: vector<u8> = x"868f005eb8e6e4ca0a47c8a77ceaa5309a47978a7c71bc5cce96366b5d7a569937c529eeda66c7293784a9402801af31";
 
     /// Update randomness
-    public(friend) fun update_randomness(sig: vector<u8>, prev_sig: vector<u8>, round: u64, clock: &Clock, world: &mut World, ctx: &TxContext) {
-        assert!(check_round_expried(round, clock), ERoundNotOver);
-
+    public(friend) fun update_randomness(sig: vector<u8>, prev_sig: vector<u8>, round: u64, world: &mut World, ctx: &TxContext) {
         let seed = derive_seed(sig, prev_sig, round);
         let tx_hash = tx_context::digest(ctx);
         vector::append(&mut seed, *tx_hash);
@@ -87,7 +84,7 @@ module apocalypse::randomness_system {
         GENESIS + 30 * (round - 1)
     }
 
-    public fun check_round_expried(round: u64, clock: &Clock): bool {
+    public fun check_round_expired(round: u64, clock: &Clock): bool {
         (timestamp_ms(clock) / 1_000) > (round_time(round) + 30)
     }
 
