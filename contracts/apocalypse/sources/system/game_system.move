@@ -22,6 +22,7 @@ module apocalypse::game_system {
     // ----------Errors----------
     const EGameNotEnd: u64 = 0;
     const EGameNotExpired: u64 = 1;
+    const EStakerPropsNotEnough: u64 = 2;
 
     // ----------Consts----------
     const SCISSORS: vector<u8> = b"scissors";
@@ -34,8 +35,11 @@ module apocalypse::game_system {
         let old_round = randomness_schema::get_round(world);
         assert!(!randomness::check_round_expired(old_round, clock), EGameNotEnd);
 
-        let player = tx_context::sender(ctx);
         let len = vector::length(&props);
+        let staking_props = pool_system::staking_props(pool);
+        assert!(vector::length(staking_props) >= len, EStakerPropsNotEnough);
+
+        let player = tx_context::sender(ctx);
         let i = 0;
         while (i < len) {
             let prop = vector::pop_back(&mut props);
@@ -87,7 +91,7 @@ module apocalypse::game_system {
             };
 
             {
-                let (balance, _, staking_props) = pool_system::pool_fields(pool);
+                let (balance, staking_props, _) = pool_system::pool_fields(pool);
                 let staking_prop = vector::borrow_mut(staking_props, index);
                 handle_game_fee(p::balance_mut(staking_prop), balance, world);
             };
