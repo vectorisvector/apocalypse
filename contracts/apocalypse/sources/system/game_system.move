@@ -122,6 +122,8 @@ module apocalypse::game_system {
             if (res == 0) {
                 let gaming_props = pool_system::gaming_props_mut(pool);
                 let gaming_prop = vector::remove(gaming_props, 0);
+                let gaming_prop_address = object::id_address(&gaming_prop);
+                game_map::remove(world, gaming_prop_address);
                 pool_system::stake(vector[gaming_prop], staking_prop_onwer, pool, world);
             };
 
@@ -129,6 +131,8 @@ module apocalypse::game_system {
             if (res == 1) {
                 let gaming_props = pool_system::gaming_props_mut(pool);
                 let gaming_prop = vector::remove(gaming_props, 0);
+                let gaming_prop_address = object::id_address(&gaming_prop);
+                game_map::remove(world, gaming_prop_address);
 
                 let staking_props = pool_system::staking_props(pool);
                 let staking_prop = vector::borrow(staking_props, index);
@@ -146,6 +150,8 @@ module apocalypse::game_system {
             if (res == 2) {
                 let gaming_props = pool_system::gaming_props_mut(pool);
                 let gaming_prop = vector::remove(gaming_props, 0);
+                let gaming_prop_address = object::id_address(&gaming_prop);
+                game_map::remove(world, gaming_prop_address);
                 pool_system::stake(vector[gaming_prop], gaming_prop_onwer, pool, world);
             };
         };
