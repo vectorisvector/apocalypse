@@ -20,18 +20,8 @@ export const obeliskConfig: ObeliskConfig = {
         prop_types: "vector<vector<u8>>",
       },
     }, // staker => { fees: 0, size: 0, last_staker_balance_plus: 0 }
-    game_map: {
-      valueType: {
-        player: "address",
-        index: "u64",
-      },
-    }, // prop => player
-    pool_map: {
-      valueType: {
-        staker: "address",
-        index: "u64",
-      },
-    }, // prop => staker
+    game_map: "address", // prop => player
+    pool_map: "address", // prop => staker
     card_map: "vector<address>", // player => [ card1, card2, ... ]
     pool: {
       valueType: {

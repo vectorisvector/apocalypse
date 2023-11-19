@@ -48,10 +48,16 @@ module apocalypse::game_system {
             handle_game_fee(p::balance_mut(&mut prop), pool_system::balance(pool), world);
 
             let prop_address = object::id_address(&prop);
-            let gaming_props = pool_system::gaming_props_mut(pool);
 
-            game_map::set(world, prop_address, player, vector::length(gaming_props));
-            vector::push_back(gaming_props, prop);
+            game_map::set(world, prop_address, player);
+            {
+                let gaming_prop_address = pool_system::gaming_prop_addresses_mut(pool);
+                vector::push_back(gaming_prop_address, prop_address);
+            };
+            {
+                let gaming_props = pool_system::gaming_props_mut(pool);
+                vector::push_back(gaming_props, prop);
+            };
 
             let game_count = global::get_game_count(world);
             if (game_count < CARD_SUPPLY) {
@@ -108,14 +114,14 @@ module apocalypse::game_system {
                 let gaming_props = pool_system::gaming_props(pool);
                 let gaming_prop = vector::borrow(gaming_props, 0);
                 let gaming_prop_address = object::id_address(gaming_prop);
-                game_map::get_player(world, gaming_prop_address)
+                game_map::get(world, gaming_prop_address)
             };
 
             let staking_prop_onwer = {
                 let staking_props = pool_system::staking_props(pool);
                 let staking_prop = vector::borrow(staking_props, index);
                 let staking_prop_address = object::id_address(staking_prop);
-                pool_map::get_staker(world, staking_prop_address)
+                pool_map::get(world, staking_prop_address)
             };
 
             // player lose

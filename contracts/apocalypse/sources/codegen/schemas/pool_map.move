@@ -19,17 +19,14 @@ module apocalypse::pool_map_schema {
 	const SCHEMA_ID: vector<u8> = b"pool_map";
 	const SCHEMA_TYPE: u8 = 0;
 
-	// staker
-	// index
+	// value
 	struct PoolMapData has copy, drop , store {
-		staker: address,
-		index: u64
+		value: address
 	}
 
-	public fun new(staker: address, index: u64): PoolMapData {
+	public fun new(value: address): PoolMapData {
 		PoolMapData {
-			staker, 
-			index
+			value
 		}
 	}
 
@@ -37,9 +34,9 @@ module apocalypse::pool_map_schema {
 		world::add_schema<Table<address,PoolMapData>>(_obelisk_world, SCHEMA_ID, table::new<address, PoolMapData>(ctx), admin_cap);
 	}
 
-	public(friend) fun set(_obelisk_world: &mut World, _obelisk_entity_key: address,  staker: address, index: u64) {
+	public(friend) fun set(_obelisk_world: &mut World, _obelisk_entity_key: address,  value: address) {
 		let _obelisk_schema = world::get_mut_schema<Table<address,PoolMapData>>(_obelisk_world, SCHEMA_ID);
-		let _obelisk_data = new( staker, index);
+		let _obelisk_data = new( value);
 		if(table::contains<address, PoolMapData>(_obelisk_schema, _obelisk_entity_key)) {
 			*table::borrow_mut<address, PoolMapData>(_obelisk_schema, _obelisk_entity_key) = _obelisk_data;
 		} else {
@@ -48,44 +45,13 @@ module apocalypse::pool_map_schema {
 		events::emit_set(SCHEMA_ID, SCHEMA_TYPE, some(_obelisk_entity_key), _obelisk_data)
 	}
 
-	public(friend) fun set_staker(_obelisk_world: &mut World, _obelisk_entity_key: address, staker: address) {
-		let _obelisk_schema = world::get_mut_schema<Table<address,PoolMapData>>(_obelisk_world, SCHEMA_ID);
-		assert!(table::contains<address, PoolMapData>(_obelisk_schema, _obelisk_entity_key), EEntityDoesNotExist);
-		let _obelisk_data = table::borrow_mut<address, PoolMapData>(_obelisk_schema, _obelisk_entity_key);
-		_obelisk_data.staker = staker;
-		events::emit_set(SCHEMA_ID, SCHEMA_TYPE, some(_obelisk_entity_key), *_obelisk_data)
-	}
-
-	public(friend) fun set_index(_obelisk_world: &mut World, _obelisk_entity_key: address, index: u64) {
-		let _obelisk_schema = world::get_mut_schema<Table<address,PoolMapData>>(_obelisk_world, SCHEMA_ID);
-		assert!(table::contains<address, PoolMapData>(_obelisk_schema, _obelisk_entity_key), EEntityDoesNotExist);
-		let _obelisk_data = table::borrow_mut<address, PoolMapData>(_obelisk_schema, _obelisk_entity_key);
-		_obelisk_data.index = index;
-		events::emit_set(SCHEMA_ID, SCHEMA_TYPE, some(_obelisk_entity_key), *_obelisk_data)
-	}
-
-	public fun get(_obelisk_world: &World, _obelisk_entity_key: address): (address,u64) {
+	public fun get(_obelisk_world: &World, _obelisk_entity_key: address): address {
 		let _obelisk_schema = world::get_schema<Table<address,PoolMapData>>(_obelisk_world, SCHEMA_ID);
 		assert!(table::contains<address, PoolMapData>(_obelisk_schema, _obelisk_entity_key), EEntityDoesNotExist);
 		let _obelisk_data = table::borrow<address, PoolMapData>(_obelisk_schema, _obelisk_entity_key);
 		(
-			_obelisk_data.staker,
-			_obelisk_data.index
+			_obelisk_data.value
 		)
-	}
-
-	public fun get_staker(_obelisk_world: &World, _obelisk_entity_key: address): address {
-		let _obelisk_schema = world::get_schema<Table<address,PoolMapData>>(_obelisk_world, SCHEMA_ID);
-		assert!(table::contains<address, PoolMapData>(_obelisk_schema, _obelisk_entity_key), EEntityDoesNotExist);
-		let _obelisk_data = table::borrow<address, PoolMapData>(_obelisk_schema, _obelisk_entity_key);
-		_obelisk_data.staker
-	}
-
-	public fun get_index(_obelisk_world: &World, _obelisk_entity_key: address): u64 {
-		let _obelisk_schema = world::get_schema<Table<address,PoolMapData>>(_obelisk_world, SCHEMA_ID);
-		assert!(table::contains<address, PoolMapData>(_obelisk_schema, _obelisk_entity_key), EEntityDoesNotExist);
-		let _obelisk_data = table::borrow<address, PoolMapData>(_obelisk_schema, _obelisk_entity_key);
-		_obelisk_data.index
 	}
 
 	public(friend) fun remove(_obelisk_world: &mut World, _obelisk_entity_key: address) {

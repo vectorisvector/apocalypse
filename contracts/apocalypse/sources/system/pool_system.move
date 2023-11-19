@@ -23,6 +23,7 @@ module apocalypse::pool_system {
     const EInsufficientCoin: u64 = 1;
     const EInsufficientPropBalance: u64 = 2;
     const ENotPropOwner: u64 = 3;
+    const EPropNotFound: u64 = 4;
 
     // ----------Consts----------
     const SCISSORS: vector<u8> = b"scissors";
@@ -34,7 +35,9 @@ module apocalypse::pool_system {
         id: UID,
         balance: Balance<SUI>,
         staking_props: vector<Prop>,
+        staking_prop_addresses: vector<address>,
         gaming_props: vector<Prop>,
+        gaming_prop_addresses: vector<address>,
     }
     
     struct POOL_SYSTEM has drop {}
@@ -48,7 +51,9 @@ module apocalypse::pool_system {
             id: object::new(ctx),
             balance: balance::zero(),
             staking_props: vector::empty(),
+            staking_prop_addresses: vector::empty(),
             gaming_props: vector::empty(),
+            gaming_prop_addresses: vector::empty(),
         });
     }
 
@@ -99,8 +104,8 @@ module apocalypse::pool_system {
             update_staker_fees(staker, world);
             update_last_staker_balance_plus(staker, world);
 
-            let prop_index = vector::length(&pool.staking_props);
-            pool_map::set(world, prop_address, staker, prop_index);
+            pool_map::set(world, prop_address, staker);
+            vector::push_back(&mut pool.staking_prop_addresses, prop_address);
             vector::push_back(&mut pool.staking_props, prop);
 
             i = i + 1;
@@ -200,8 +205,11 @@ module apocalypse::pool_system {
         while (i < len) {
             let prop_address = vector::pop_back(&mut prop_addresses);
 
-            let (staker_, prop_index) = pool_map::get(world, prop_address);
+            let staker_ = pool_map::get(world, prop_address);
             assert!(staker == staker_, ENotPropOwner);
+
+            let (in, prop_index) = vector::index_of(&pool.staking_prop_addresses, &prop_address);
+            assert!(in, EPropNotFound);
 
             let prop = vector::remove(&mut pool.staking_props, prop_index);
             let type = p::type(&prop);
@@ -211,8 +219,9 @@ module apocalypse::pool_system {
             update_staker_prop_count(type, prop_address, 1, false, staker, world);
             update_last_staker_balance_plus(staker, world);
 
-            pool_map::remove(world, prop_address);
             vector::push_back(&mut props, prop);
+            vector::remove(&mut pool.staking_prop_addresses, prop_index);
+            pool_map::remove(world, prop_address);
 
             i = i + 1;
         };
@@ -228,8 +237,24 @@ module apocalypse::pool_system {
         &mut pool.gaming_props
     }
 
+    public fun gaming_prop_addresses(pool: &Pool): &vector<address> {
+        &pool.gaming_prop_addresses
+    }
+
+    public(friend) fun gaming_prop_addresses_mut(pool: &mut Pool): &mut vector<address> {
+        &mut pool.gaming_prop_addresses
+    }
+
     public fun staking_props(pool: &Pool): &vector<Prop> {
         &pool.staking_props
+    }
+
+    public fun staking_prop_addresses(pool: &Pool): &vector<address> {
+        &pool.staking_prop_addresses
+    }
+
+    public(friend) fun staking_prop_addresses_mut(pool: &mut Pool): &mut vector<address> {
+        &mut pool.staking_prop_addresses
     }
 
     public(friend) fun staking_props_mut(pool: &mut Pool): &mut vector<Prop> {

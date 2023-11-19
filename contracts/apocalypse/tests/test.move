@@ -86,7 +86,7 @@ module apocalypse::test {
 
             game::start_game_new_card(vector[prop], &clock, &mut pool, &mut world, ctx);
 
-            let gaming_prop_onwer = game_map::get_player(&world, prop_address);
+            let gaming_prop_onwer = game_map::get(&world, prop_address);
             debug::print(&gaming_prop_onwer);
 
             // game::end_game(sig, prev_sig, round, &clock, &mut pool, &mut world, ctx);
@@ -106,7 +106,7 @@ module apocalypse::test {
             let prev_sig = x"83c2952f4496eaf39844bc5caeccbb4e1ca8ce424a02be9affeb78e4c3b10ce34d714805db6a11b320500bba4c140d3d0a36f37f1da68d0b05e2f094076b0024e324d262a0a20a52248ae575f82a3972127953dda44854a1f875cd9f5e37d82c";
             let round = 3490437;
 
-            let gaming_prop_onwer = game_map::get_player(&world, prop_address);
+            let gaming_prop_onwer = game_map::get(&world, prop_address);
             debug::print(&gaming_prop_onwer);
 
             let gaming_props = pool_system::gaming_props(&pool);
