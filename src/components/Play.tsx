@@ -53,7 +53,7 @@ export default function Play({ type, props }: PlayProps) {
 
       <button
         className={classNames(" btn mt-6", map.class)}
-        disabled={oldRound === "0"}
+        disabled={oldRound === "0" || props.length === 0}
         onClick={() => setIsOpen(true)}
       >
         Play

@@ -85,7 +85,7 @@ module apocalypse::game_system {
             if (len == 0) break;
 
             let index = {
-                let staking_props = pool_system::staking_props_mut(pool);
+                let staking_props = pool_system::staking_props(pool);
                 let upper_bound = vector::length(staking_props);
                 random(upper_bound, world)
             };
@@ -124,7 +124,13 @@ module apocalypse::game_system {
                 let gaming_prop = vector::remove(gaming_props, 0);
                 let gaming_prop_address = object::id_address(&gaming_prop);
                 game_map::remove(world, gaming_prop_address);
-                pool_system::stake(vector[gaming_prop], staking_prop_onwer, pool, world);
+
+                let state = pool_system::get_prop_balance_state(&gaming_prop, world);
+                if (state) {
+                    pool_system::stake(vector[gaming_prop], staking_prop_onwer, pool, world);
+                } else {
+                    transfer::public_transfer(gaming_prop, staking_prop_onwer);
+                };
             };
 
             // player win
@@ -152,7 +158,13 @@ module apocalypse::game_system {
                 let gaming_prop = vector::remove(gaming_props, 0);
                 let gaming_prop_address = object::id_address(&gaming_prop);
                 game_map::remove(world, gaming_prop_address);
-                pool_system::stake(vector[gaming_prop], gaming_prop_onwer, pool, world);
+
+                let state = pool_system::get_prop_balance_state(&gaming_prop, world);
+                if (state) {
+                    pool_system::stake(vector[gaming_prop], gaming_prop_onwer, pool, world);
+                } else {
+                    transfer::public_transfer(gaming_prop, gaming_prop_onwer);
+                };
             };
         };
     }

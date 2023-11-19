@@ -24,7 +24,7 @@ module apocalypse::test {
 
     #[test]
     fun test() {
-        let admin = @0xA;
+        let admin = @0xAA;
 
         let scenario_val = test_scenario::begin(admin);
         let scenario = &mut scenario_val;

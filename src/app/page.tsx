@@ -18,7 +18,7 @@ export default function Home() {
     <WalletProvider autoConnect>
       <Header />
 
-      <main className=" mx-auto flex max-w-7xl flex-col py-10">
+      <main className=" mx-auto flex max-w-6xl flex-col py-10">
         <Content />
       </main>
     </WalletProvider>

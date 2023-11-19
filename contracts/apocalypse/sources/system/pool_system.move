@@ -185,7 +185,11 @@ module apocalypse::pool_system {
     }
 
     public fun check_prop_balance(prop: &Prop, world: &World) {
-        assert!(p::balance(prop) > p::min_prop_balance(world), EInsufficientPropBalance);
+        assert!(get_prop_balance_state(prop, world), EInsufficientPropBalance);
+    }
+
+    public fun get_prop_balance_state(prop: &Prop, world: &World): bool {
+        p::balance(prop) > p::min_prop_balance(world)
     }
 
     // ----------Friend Functions----------
