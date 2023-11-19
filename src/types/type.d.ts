@@ -1,10 +1,10 @@
-export interface PoolWrapper {
+export interface PoolSchemaWrapper {
   value: {
-    fields: Pool;
+    fields: PoolSchema;
   };
 }
 
-export interface Pool {
+export interface PoolSchema {
   balance: string;
   staker_balance: string;
   staker_balance_plus: string;
@@ -23,13 +23,13 @@ export interface Pool {
   prop_count: string;
 }
 
-export interface GlobalWrapper {
+export interface GlobalSchemaWrapper {
   value: {
-    fields: Global;
+    fields: GlobalSchema;
   };
 }
 
-export interface Global {
+export interface GlobalSchema {
   scissors_count: string;
   rock_count: string;
   paper_count: string;
@@ -40,7 +40,7 @@ export interface Global {
 
 export type PropType = "scissors" | "rock" | "paper";
 
-export interface Prop {
+export interface PropOriginal {
   balance: string;
   type: PropType;
   id: {
@@ -48,10 +48,16 @@ export interface Prop {
   };
 }
 
+export interface Prop {
+  id: string;
+  type: PropType;
+  balance: string;
+}
+
 export interface Props {
-  scissors: string[];
-  rock: string[];
-  paper: string[];
+  scissors: Prop[];
+  rock: Prop[];
+  paper: Prop[];
 }
 
 export interface Card {
@@ -61,4 +67,26 @@ export interface Card {
   size: string;
   fees: string;
   last_player_balance_plus: string;
+}
+
+export interface PoolOriginal {
+  balance: string;
+  id: {
+    id: string;
+  };
+  gaming_props: {
+    type: PropType;
+    fields: PropOriginal;
+  }[];
+  staking_props: {
+    type: PropType;
+    fields: PropOriginal;
+  }[];
+}
+
+export interface Pool {
+  id: string;
+  balance: string;
+  gaming_props: Prop[];
+  staking_props: Prop[];
 }

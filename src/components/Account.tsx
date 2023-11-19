@@ -8,7 +8,7 @@ import {
   useStake,
   useStakingProps,
   useUnstake,
-} from "@/utils/service";
+} from "@/services";
 import { useWallet } from "@suiet/wallet-kit";
 import { useCallback, useMemo, useState } from "react";
 import Play from "./Play";
@@ -74,11 +74,11 @@ export default function Account() {
         });
       } else if (type === "burn") {
         burn({
-          propIds: props[propType].slice(0, count),
+          propIds: props[propType].slice(0, count).map((prop) => prop.id),
         });
       } else if (type === "stake") {
         stake({
-          propIds: props[propType].slice(0, count),
+          propIds: props[propType].slice(0, count).map((prop) => prop.id),
         });
       } else if (type === "unstake") {
         unstake({

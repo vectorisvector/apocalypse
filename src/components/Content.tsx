@@ -7,7 +7,7 @@ export default function Content() {
   const countdown = useCountdown(beacon);
 
   return (
-    <div className=" flex flex-col gap-10">
+    <div className=" flex w-full max-w-5xl flex-1 flex-col gap-10">
       {/* Round */}
       <div className=" relative h-12 text-center font-bold">
         {beacon && (

@@ -1,12 +1,21 @@
 import useSWR from "swr";
 import useSWRMutation from "swr/mutation";
-import { suiClient } from "./sui";
-import { global_schema, packageId, pool, pool_schema, world } from "./config";
+import { suiClient } from "../utils/sui";
+import {
+  global_schema,
+  packageId,
+  pool,
+  pool_schema,
+  world,
+} from "../utils/config";
 import {
   Card,
-  GlobalWrapper,
-  PoolWrapper,
+  GlobalSchemaWrapper,
+  Pool,
+  PoolOriginal,
+  PoolSchemaWrapper,
   Prop,
+  PropOriginal,
   PropType,
   Props,
 } from "@/types/type";
@@ -14,8 +23,10 @@ import { useWallet } from "@suiet/wallet-kit";
 import { TransactionBlock } from "@mysten/sui.js/transactions";
 import { MIST_PER_SUI, SUI_CLOCK_OBJECT_ID } from "@mysten/sui.js/utils";
 import { bcs } from "@mysten/sui.js/bcs";
-import { useBeacon } from "./drand";
-import { checkRoundExpired } from "./helper";
+import { useBeacon } from "../utils/drand";
+import { checkRoundExpired, formatPool, formatProp } from "../utils/helper";
+
+// Getters
 
 export const useBalance = (address?: string) => {
   const { data } = useSWR(
@@ -26,15 +37,15 @@ export const useBalance = (address?: string) => {
         owner: address,
       });
     },
-    { refreshInterval: 10_000 },
+    { refreshInterval: 5_000 },
   );
 
   return data;
 };
 
-export const usePool = () => {
+export const usePoolSchema = () => {
   const { data } = useSWR(
-    "pool",
+    "pool_schema",
     () => {
       return suiClient
         .getObject({
@@ -45,17 +56,17 @@ export const usePool = () => {
         })
         .then((res) => res.data);
     },
-    { refreshInterval: 10_000 },
+    { refreshInterval: 5_000 },
   );
 
   if (data?.content?.dataType === "moveObject") {
-    return (data.content.fields as unknown as PoolWrapper).value.fields;
+    return (data.content.fields as unknown as PoolSchemaWrapper).value.fields;
   }
 };
 
-export const useGlobal = () => {
+export const useGlobalSchema = () => {
   const { data } = useSWR(
-    "global",
+    "global_schema",
     () => {
       return suiClient
         .getObject({
@@ -66,11 +77,11 @@ export const useGlobal = () => {
         })
         .then((res) => res.data);
     },
-    { refreshInterval: 10_000 },
+    { refreshInterval: 5_000 },
   );
 
   if (data?.content?.dataType === "moveObject") {
-    return (data.content.fields as unknown as GlobalWrapper).value.fields;
+    return (data.content.fields as unknown as GlobalSchemaWrapper).value.fields;
   }
 };
 
@@ -91,7 +102,7 @@ export const useAccountProps = (address?: string) => {
         })
         .then((res) => res.data);
     },
-    { refreshInterval: 10_000 },
+    { refreshInterval: 5_000 },
   );
 
   const props: Props = {
@@ -102,8 +113,8 @@ export const useAccountProps = (address?: string) => {
 
   data?.forEach(({ data }) => {
     if (data?.content?.dataType === "moveObject") {
-      const prop = data.content.fields as unknown as Prop;
-      props[prop.type].push(prop.id.id);
+      const prop = data.content.fields as unknown as PropOriginal;
+      props[prop.type].push(formatProp(prop));
     }
   });
   return props;
@@ -128,7 +139,7 @@ export const useStakingProps = (address?: string) => {
         })
         .then((res) => res);
     },
-    { refreshInterval: 10_000 },
+    { refreshInterval: 5_000 },
   );
 
   if (data?.error) {
@@ -183,7 +194,7 @@ export const useAccountCards = (address?: string) => {
         })
         .then((res) => res.data);
     },
-    { refreshInterval: 10_000 },
+    { refreshInterval: 5_000 },
   );
 
   const cards = (data
@@ -216,7 +227,7 @@ export const useOldRound = () => {
         })
         .then((res) => res);
     },
-    { refreshInterval: 10_000 },
+    { refreshInterval: 5_000 },
   );
 
   if (data?.error) {
@@ -230,6 +241,37 @@ export const useOldRound = () => {
 
   return values[0] as string;
 };
+
+export const usePool = (): Pool => {
+  const { data } = useSWR(
+    "pool",
+    () => {
+      return suiClient
+        .getObject({
+          id: pool,
+          options: {
+            showContent: true,
+          },
+        })
+        .then((res) => res.data);
+    },
+    { refreshInterval: 5_000 },
+  );
+
+  if (data?.content?.dataType === "moveObject") {
+    const res = data.content.fields as unknown as PoolOriginal;
+    return formatPool(res);
+  }
+
+  return {
+    id: pool,
+    balance: "0",
+    gaming_props: [],
+    staking_props: [],
+  };
+};
+
+// Mutations
 
 export const useMint = () => {
   const wallet = useWallet();

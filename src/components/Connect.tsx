@@ -4,7 +4,7 @@ import { useState } from "react";
 import { mistToSui, truncateAddress } from "@/utils/helper";
 import ConnectModal from "./ConnectModal";
 import { useWallet } from "@suiet/wallet-kit";
-import { useBalance } from "@/utils/service";
+import { useBalance } from "@/services";
 export default function Connect() {
   const [showModal, setShowModal] = useState(false);
 

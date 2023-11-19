@@ -41,9 +41,10 @@ export const useBeacon = () => {
 };
 
 export const useCountdown = (beacon?: G2ChainedBeacon) => {
-  const [countdown, setCountdown] = useState<number>(0);
+  const [countdown, setCountdown] = useState<number>(30);
 
   useEffect(() => {
+    setCountdown(30);
     if (!beacon) return;
     const interval = setInterval(() => {
       const now = Math.floor(Date.now() / 1000);
@@ -51,6 +52,7 @@ export const useCountdown = (beacon?: G2ChainedBeacon) => {
       const time = roundTime(round) + 30;
       const countdown = time - now;
       setCountdown(countdown);
+      countdown <= 0 && clearInterval(interval);
     }, 1000);
 
     return () => {

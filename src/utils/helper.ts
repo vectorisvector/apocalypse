@@ -1,3 +1,4 @@
+import { Pool, PoolOriginal, Prop, PropOriginal } from "@/types/type";
 import { MIST_PER_SUI } from "@mysten/sui.js/utils";
 import BigNumber from "bignumber.js";
 
@@ -59,4 +60,21 @@ export function roundTime(round: number): number {
 
 export function checkRoundExpired(round: number): boolean {
   return Date.now() / 1000 > roundTime(round) + 30;
+}
+
+export function formatProp(prop: PropOriginal): Prop {
+  return {
+    id: prop.id.id,
+    type: prop.type,
+    balance: prop.balance,
+  };
+}
+
+export function formatPool(pool: PoolOriginal): Pool {
+  return {
+    id: pool.id.id,
+    balance: pool.balance,
+    gaming_props: pool.gaming_props.map((prop) => formatProp(prop.fields)),
+    staking_props: pool.staking_props.map((prop) => formatProp(prop.fields)),
+  };
 }
