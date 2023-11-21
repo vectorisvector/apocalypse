@@ -14,7 +14,6 @@ import {
   Pool,
   PoolOriginal,
   PoolSchemaWrapper,
-  Prop,
   PropOriginal,
   PropType,
   Props,
