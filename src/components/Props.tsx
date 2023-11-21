@@ -129,7 +129,7 @@ export default function Props({ handleModal }: PropsProps) {
           {(Object.values(props) as Prop[][]).map((values, idx) => (
             <Tab.Panel
               key={idx}
-              className="rounded-xl bg-white p-3"
+              className="flex flex-wrap gap-4 rounded-xl bg-white p-3"
             >
               {values.map((prop) => (
                 <div
