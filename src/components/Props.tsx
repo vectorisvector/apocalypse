@@ -63,7 +63,7 @@ export default function Props({ handleModal }: PropsProps) {
                 type === "scissors" ? " btn-secondary" : "",
                 type === "paper" ? " btn-accent" : "",
               )}
-              onClick={() => handleModal("mint", "rock")}
+              onClick={() => handleModal("mint", type)}
             >
               mint
             </button>
@@ -78,7 +78,7 @@ export default function Props({ handleModal }: PropsProps) {
               onClick={() =>
                 handleModal(
                   "stake",
-                  "rock",
+                  type,
                   playerProps.length > 100 ? 100 : playerProps.length,
                 )
               }
@@ -91,7 +91,7 @@ export default function Props({ handleModal }: PropsProps) {
               onClick={() =>
                 handleModal(
                   "burn",
-                  "rock",
+                  type,
                   playerProps.length > 100 ? 100 : playerProps.length,
                 )
               }
@@ -104,7 +104,7 @@ export default function Props({ handleModal }: PropsProps) {
               onClick={() =>
                 handleModal(
                   "unstake",
-                  "rock",
+                  type,
                   stakingProps.length > 100 ? 100 : stakingProps.length,
                 )
               }
