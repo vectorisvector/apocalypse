@@ -10,6 +10,7 @@ import {
 } from "../utils/config";
 import {
   Card,
+  CardOriginal,
   GlobalSchemaWrapper,
   Pool,
   PoolOriginal,
@@ -23,7 +24,12 @@ import { TransactionBlock } from "@mysten/sui.js/transactions";
 import { MIST_PER_SUI, SUI_CLOCK_OBJECT_ID } from "@mysten/sui.js/utils";
 import { bcs } from "@mysten/sui.js/bcs";
 import { useBeacon } from "../utils/drand";
-import { checkRoundExpired, formatPool, formatProp } from "../utils/helper";
+import {
+  checkRoundExpired,
+  formatCard,
+  formatPool,
+  formatProp,
+} from "../utils/helper";
 
 // Getters
 
@@ -105,8 +111,8 @@ export const useAccountProps = (address?: string) => {
   );
 
   const props: Props = {
-    scissors: [],
     rock: [],
+    scissors: [],
     paper: [],
   };
 
@@ -199,12 +205,13 @@ export const useAccountCards = (address?: string) => {
   const cards = (data
     ?.map(({ data }) => {
       if (data?.content?.dataType === "moveObject") {
-        const card = data.content.fields as unknown as Card;
+        const card = data.content.fields as unknown as CardOriginal;
         return card;
       }
     })
-    .filter((card) => card) ?? []) as Card[];
-  return cards;
+    .filter((card) => card) ?? []) as CardOriginal[];
+
+  return cards.map((card) => formatCard(card));
 };
 
 export const useOldRound = () => {
@@ -455,7 +462,6 @@ export const useStartGame = (oldRound: number) => {
       const txb = new TransactionBlock();
 
       if (checkRoundExpired(oldRound)) {
-        console.log("round expired");
         txb.moveCall({
           target: `${packageId}::game_system::end_game`,
           arguments: [
@@ -510,7 +516,6 @@ export const useStartGame = (oldRound: number) => {
         transactionBlock: txb,
         sender: wallet.address,
       });
-      console.log(res);
     },
   );
 

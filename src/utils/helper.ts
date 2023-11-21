@@ -1,4 +1,11 @@
-import { Pool, PoolOriginal, Prop, PropOriginal } from "@/types/type";
+import {
+  Card,
+  CardOriginal,
+  Pool,
+  PoolOriginal,
+  Prop,
+  PropOriginal,
+} from "@/types/type";
 import { MIST_PER_SUI } from "@mysten/sui.js/utils";
 import BigNumber from "bignumber.js";
 
@@ -25,7 +32,9 @@ export function mistToSui(mist: number | string, decimal: number = 2): string {
     ROUNDING_MODE: BigNumber.ROUND_DOWN,
   });
   const v = new BigNumber(mist);
-  const sui = v.div(MIST_PER_SUI.toString()).toFixed(decimal);
+  const sui = parseFloat(
+    v.div(MIST_PER_SUI.toString()).toFixed(decimal),
+  ).toString();
   return sui;
 }
 
@@ -76,5 +85,14 @@ export function formatPool(pool: PoolOriginal): Pool {
     balance: pool.balance,
     gaming_props: pool.gaming_props.map((prop) => formatProp(prop.fields)),
     staking_props: pool.staking_props.map((prop) => formatProp(prop.fields)),
+  };
+}
+
+export function formatCard(card: CardOriginal): Card {
+  return {
+    id: card.id.id,
+    size: card.size,
+    fees: card.fees,
+    last_player_balance_plus: card.last_player_balance_plus,
   };
 }

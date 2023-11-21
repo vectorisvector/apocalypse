@@ -12,8 +12,9 @@ import {
 import { useWallet } from "@suiet/wallet-kit";
 import { useCallback, useMemo, useState } from "react";
 import Play from "./Play";
+import Props from "./Props";
 
-type actionType = "mint" | "burn" | "stake" | "unstake";
+export type actionType = "mint" | "burn" | "stake" | "unstake";
 
 export default function Account() {
   const [isOpen, setIsOpen] = useState(false);
@@ -122,56 +123,6 @@ export default function Account() {
                 </div>
               </div>
 
-              <div className=" mt-2 flex items-center justify-between gap-4">
-                <button
-                  className=" btn btn-primary btn-sm"
-                  onClick={() => handleModal("mint", "rock")}
-                >
-                  mint
-                </button>
-                <button
-                  className=" btn btn-error btn-sm"
-                  disabled={propsRock === 0}
-                  onClick={() =>
-                    handleModal(
-                      "burn",
-                      "rock",
-                      propsRock > 100 ? 100 : propsRock,
-                    )
-                  }
-                >
-                  burn
-                </button>
-              </div>
-
-              <div className=" mt-2 flex items-center justify-between gap-4">
-                <button
-                  className=" btn btn-primary btn-sm"
-                  onClick={() =>
-                    handleModal(
-                      "stake",
-                      "rock",
-                      propsRock > 100 ? 100 : propsRock,
-                    )
-                  }
-                >
-                  stake
-                </button>
-                <button
-                  className=" btn btn-error btn-sm"
-                  disabled={stakingRock === 0}
-                  onClick={() =>
-                    handleModal(
-                      "unstake",
-                      "rock",
-                      stakingRock > 100 ? 100 : stakingRock,
-                    )
-                  }
-                >
-                  unstake
-                </button>
-              </div>
-
               <Play
                 type="rock"
                 props={props.rock}
@@ -197,56 +148,6 @@ export default function Account() {
                 </div>
               </div>
 
-              <div className=" mt-2 flex items-center justify-between gap-4">
-                <button
-                  className=" btn btn-secondary btn-sm"
-                  onClick={() => handleModal("mint", "scissors")}
-                >
-                  mint
-                </button>
-                <button
-                  className=" btn btn-error btn-sm"
-                  disabled={propsScissors === 0}
-                  onClick={() =>
-                    handleModal(
-                      "burn",
-                      "scissors",
-                      propsScissors > 100 ? 100 : propsScissors,
-                    )
-                  }
-                >
-                  burn
-                </button>
-              </div>
-
-              <div className=" mt-2 flex items-center justify-between gap-4">
-                <button
-                  className=" btn btn-secondary btn-sm"
-                  onClick={() =>
-                    handleModal(
-                      "stake",
-                      "scissors",
-                      propsScissors > 100 ? 100 : propsScissors,
-                    )
-                  }
-                >
-                  stake
-                </button>
-                <button
-                  className=" btn btn-error btn-sm"
-                  disabled={stakingScissors === 0}
-                  onClick={() =>
-                    handleModal(
-                      "unstake",
-                      "scissors",
-                      stakingScissors > 100 ? 100 : stakingScissors,
-                    )
-                  }
-                >
-                  unstake
-                </button>
-              </div>
-
               <Play
                 type="scissors"
                 props={props.scissors}
@@ -268,62 +169,15 @@ export default function Account() {
                 </div>
               </div>
 
-              <div className=" mt-2 flex items-center justify-between gap-4">
-                <button
-                  className=" btn btn-accent btn-sm"
-                  onClick={() => handleModal("mint", "paper")}
-                >
-                  mint
-                </button>
-                <button
-                  className=" btn btn-error btn-sm"
-                  disabled={propsPaper === 0}
-                  onClick={() =>
-                    handleModal(
-                      "burn",
-                      "paper",
-                      propsPaper > 100 ? 100 : propsPaper,
-                    )
-                  }
-                >
-                  burn
-                </button>
-              </div>
-
-              <div className=" mt-2 flex items-center justify-between gap-4">
-                <button
-                  className=" btn btn-accent btn-sm"
-                  onClick={() =>
-                    handleModal(
-                      "stake",
-                      "paper",
-                      propsPaper > 100 ? 100 : propsPaper,
-                    )
-                  }
-                >
-                  stake
-                </button>
-                <button
-                  className=" btn btn-error btn-sm"
-                  disabled={stakingPaper === 0}
-                  onClick={() =>
-                    handleModal(
-                      "unstake",
-                      "paper",
-                      stakingPaper > 100 ? 100 : stakingPaper,
-                    )
-                  }
-                >
-                  unstake
-                </button>
-              </div>
-
               <Play
                 type="paper"
                 props={props.paper}
               />
             </div>
           </div>
+
+          {/* Props */}
+          <Props handleModal={handleModal} />
         </div>
       )}
     </>

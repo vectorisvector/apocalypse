@@ -4,6 +4,8 @@ import { useWallet } from "@suiet/wallet-kit";
 import classNames from "classnames";
 import { useCallback, useMemo, useState } from "react";
 import InputModal from "./InputModal";
+import { MIN_BALANCE } from "@/utils/const";
+import BigNumber from "bignumber.js";
 
 interface PlayProps {
   type: PropType;
@@ -32,14 +34,18 @@ export default function Play({ type, props }: PlayProps) {
     }[type];
   }, [type]);
 
+  const activeProps = useMemo(() => {
+    return props.filter((prop) => BigNumber(prop.balance).gt(MIN_BALANCE));
+  }, [props]);
+
   const handleConfirm = useCallback(
     (count: number) => {
       startGame({
-        propIds: props.slice(0, count).map((prop) => prop.id),
-        card: cards.length > 0 ? cards[0].id.id : undefined,
+        propIds: activeProps.slice(0, count).map((prop) => prop.id),
+        card: cards.length > 0 ? cards[0].id : undefined,
       });
     },
-    [cards, props, startGame],
+    [activeProps, cards, startGame],
   );
 
   return (
@@ -47,13 +53,13 @@ export default function Play({ type, props }: PlayProps) {
       <InputModal
         isOpen={isOpen}
         closeModal={() => setIsOpen(false)}
-        maxCount={props.length}
+        maxCount={activeProps.length}
         onConfirm={handleConfirm}
       />
 
       <button
         className={classNames(" btn mt-6", map.class)}
-        disabled={oldRound === "0" || props.length === 0}
+        disabled={oldRound === "0" || activeProps.length === 0}
         onClick={() => setIsOpen(true)}
       >
         Play

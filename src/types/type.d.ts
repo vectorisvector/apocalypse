@@ -55,15 +55,22 @@ export interface Prop {
 }
 
 export interface Props {
-  scissors: Prop[];
   rock: Prop[];
+  scissors: Prop[];
   paper: Prop[];
 }
 
-export interface Card {
+export interface CardOriginal {
   id: {
     id: string;
   };
+  size: string;
+  fees: string;
+  last_player_balance_plus: string;
+}
+
+export interface Card {
+  id: string;
   size: string;
   fees: string;
   last_player_balance_plus: string;

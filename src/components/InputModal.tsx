@@ -70,7 +70,7 @@ export default function InputModal({
                 <div className=" mt-4 flex flex-col items-center gap-4">
                   <input
                     type="number"
-                    placeholder="Input Count"
+                    placeholder={`Max Count: ${maxCount}`}
                     className={classNames(
                       " input input-bordered w-full",
                       isError ? " input-error" : "",
