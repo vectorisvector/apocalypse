@@ -7,6 +7,7 @@ module apocalypse::game_system {
     use sui::sui::SUI;
     use sui::transfer::{Self};
     use sui::clock::{Clock};
+    use sui::event::{Self};
 
     use apocalypse::world::{World};
     use apocalypse::randomness_schema::{Self};
@@ -29,6 +30,19 @@ module apocalypse::game_system {
     const ROCK: vector<u8> = b"rock";
     const PAPER: vector<u8> = b"paper";
     const CARD_SUPPLY: u64 = 100_000_000; // 100 million
+
+    // ----------Events----------
+    struct GameOver has copy, drop {
+        win: u8,
+        player: address,
+        gaming_prop_id: address,
+        gaming_prop_type: vector<u8>,
+        gaming_prop_balance: u64,
+        staker: address,
+        staking_prop_id: address,
+        staking_prop_type: vector<u8>,
+        staking_prop_balance: u64,
+    }
 
     // ----------Public Functions----------
     public fun start_game(props: vector<Prop>, card: &mut Card, clock: &Clock, pool: &mut Pool, world: &mut World, ctx: &TxContext) {
@@ -122,6 +136,24 @@ module apocalypse::game_system {
                 let staking_prop = vector::borrow(staking_props, index);
                 let staking_prop_address = object::id_address(staking_prop);
                 pool_map::get(world, staking_prop_address)
+            };
+
+            {
+                let gaming_props = pool_system::gaming_props(pool);
+                let gaming_prop = vector::borrow(gaming_props, 0);
+                let staking_props = pool_system::staking_props(pool);
+                let staking_prop = vector::borrow(staking_props, index);
+                event::emit(GameOver {
+                    win: res,
+                    player: gaming_prop_onwer,
+                    gaming_prop_id: object::id_address(gaming_prop),
+                    gaming_prop_type: p::type(gaming_prop),
+                    gaming_prop_balance: p::balance(gaming_prop),
+                    staker: staking_prop_onwer,
+                    staking_prop_id: object::id_address(staking_prop),
+                    staking_prop_type: p::type(staking_prop),
+                    staking_prop_balance: p::balance(staking_prop),
+                });
             };
 
             // player lose
