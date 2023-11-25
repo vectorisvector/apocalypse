@@ -13,7 +13,7 @@ export default function StakerProps() {
 
   return (
     <div className=" left-5 top-10 w-80 rounded-lg border p-4">
-      <h2 className=" text-xl font-bold">Staker Props</h2>
+      <h2 className=" text-xl font-bold">Staker Props Pool</h2>
 
       <div className=" mt-4 flex h-6 items-center gap-4">
         <span className=" text-primary">Rock: {getTypeCount("rock")}</span>

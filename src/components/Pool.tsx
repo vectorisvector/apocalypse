@@ -6,7 +6,7 @@ export default function Pool() {
 
   return (
     <div className=" flex flex-col gap-4">
-      <h2 className=" text-3xl font-bold">Pool</h2>
+      <h2 className=" text-3xl font-bold">Fee</h2>
       <div className=" stats flex w-full shadow">
         <div className="stat">
           <div className="stat-title">Total Balance</div>

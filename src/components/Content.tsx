@@ -11,9 +11,10 @@ export default function Content() {
       {/* Round */}
       <div className=" relative h-12 text-center font-bold">
         {beacon && (
-          <span className=" absolute left-0 top-1/2 -translate-y-1/2 text-2xl">
-            {beacon.round}
-          </span>
+          <div className=" absolute left-0 top-1/2 flex -translate-y-1/2 flex-col items-start">
+            <span>Round</span>
+            <span>{beacon.round}</span>
+          </div>
         )}
         <span className=" text-5xl text-primary">{countdown}s</span>
       </div>
